@@ -1,0 +1,260 @@
+// Flowinaja - Enterprise Request & Approval Platform
+// Prisma Schema Definition
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// --------------------------------------------------------
+// ENUMS
+// --------------------------------------------------------
+
+enum UserRole {
+  EMPLOYEE
+  SUPERVISOR
+  MANAGER
+  ADMIN
+}
+
+enum RequestPriority {
+  LOW
+  NORMAL
+  HIGH
+  URGENT
+}
+
+enum RequestStatus {
+  DRAFT
+  SUBMITTED
+  IN_REVIEW
+  APPROVED
+  REJECTED
+  REVISION_REQUIRED
+  PROCESSING
+  COMPLETED
+  CANCELLED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  REVISION_REQUESTED
+}
+
+enum ActivityAction {
+  REQUEST_CREATED
+  REQUEST_SUBMITTED
+  REQUEST_APPROVED
+  REQUEST_REJECTED
+  REVISION_REQUESTED
+  REQUEST_PROCESSING
+  REQUEST_COMPLETED
+  REQUEST_CANCELLED
+  USER_UPDATED
+  SETTINGS_UPDATED
+}
+
+// --------------------------------------------------------
+// MODELS
+// --------------------------------------------------------
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relationships
+  users        User[]
+  departments  Department[]
+  requestTypes RequestType[]
+  requests     Request[]
+  activityLogs ActivityLog[]
+  notifications Notification[]
+
+  @@map("organizations")
+}
+
+model Department {
+  id             String       @id @default(cuid())
+  organizationId String
+  name           String
+  code           String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  users        User[]
+  requests     Request[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("departments")
+}
+
+model User {
+  id             String       @id @default(cuid())
+  organizationId String
+  departmentId   String?
+  name           String
+  email          String       @unique
+  role           UserRole     @default(EMPLOYEE)
+  avatarUrl      String?
+  isActive       Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  requests     Request[]    @relation("UserRequests")
+  approvals    Approval[]   @relation("UserApprovals")
+  activityLogs ActivityLog[] @relation("UserActivities")
+  notifications Notification[] @relation("UserNotifications")
+
+  @@index([organizationId])
+  @@index([departmentId])
+  @@map("users")
+}
+
+model RequestType {
+  id             String         @id @default(cuid())
+  organizationId String
+  name           String
+  description    String?
+  code           String?
+  isActive       Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relationships
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  approvalSteps ApprovalStep[]
+  requests      Request[]
+
+  @@unique([organizationId, name])
+  @@index([organizationId])
+  @@map("request_types")
+}
+
+model ApprovalStep {
+  id            String       @id @default(cuid())
+  requestTypeId String
+  stepOrder     Int
+  roleRequired  UserRole
+  title         String
+  isFinal       Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  // Relationships
+  requestType RequestType @relation(fields: [requestTypeId], references: [id], onDelete: Cascade)
+  approvals   Approval[]
+
+  @@unique([requestTypeId, stepOrder])
+  @@index([requestTypeId])
+  @@map("approval_steps")
+}
+
+model Request {
+  id               String          @id @default(cuid())
+  organizationId   String
+  requesterId      String
+  departmentId     String?
+  requestTypeId    String
+  title            String
+  description      String
+  status           RequestStatus   @default(DRAFT)
+  currentStepOrder Int             @default(1)
+  priority         RequestPriority @default(NORMAL)
+  createdAt        DateTime        @default(now())
+  updatedAt        DateTime        @updatedAt
+
+  // Relationships
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  requester     User           @relation("UserRequests", fields: [requesterId], references: [id], onDelete: Restrict)
+  department    Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  requestType   RequestType    @relation(fields: [requestTypeId], references: [id], onDelete: Restrict)
+  approvals     Approval[]
+  activityLogs  ActivityLog[]
+  notifications Notification[]
+
+  @@index([organizationId, status])
+  @@index([organizationId, createdAt])
+  @@index([requesterId])
+  @@index([requestTypeId])
+  @@map("requests")
+}
+
+model Approval {
+  id             String         @id @default(cuid())
+  requestId      String
+  approvalStepId String?
+  approverId     String?
+  stepOrder      Int
+  status         ApprovalStatus @default(PENDING)
+  comment        String?
+  decidedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+
+  // Relationships
+  request      Request       @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  approvalStep ApprovalStep? @relation(fields: [approvalStepId], references: [id], onDelete: SetNull)
+  approver     User?         @relation("UserApprovals", fields: [approverId], references: [id], onDelete: SetNull)
+
+  @@index([requestId])
+  @@index([approverId])
+  @@index([status])
+  @@map("approvals")
+}
+
+model ActivityLog {
+  id             String         @id @default(cuid())
+  organizationId String
+  requestId      String?
+  actorId        String?
+  action         ActivityAction
+  details        String?
+  createdAt      DateTime       @default(now())
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  request      Request?     @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  actor        User?        @relation("UserActivities", fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([organizationId, createdAt])
+  @@index([requestId])
+  @@index([actorId])
+  @@map("activity_logs")
+}
+
+model Notification {
+  id             String    @id @default(cuid())
+  organizationId String
+  recipientId    String
+  requestId      String?
+  title          String
+  message        String
+  isRead         Boolean   @default(false)
+  readAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  // Relationships
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recipient    User         @relation("UserNotifications", fields: [recipientId], references: [id], onDelete: Cascade)
+  request      Request?     @relation(fields: [requestId], references: [id], onDelete: SetNull)
+
+  @@index([recipientId, isRead])
+  @@index([organizationId])
+  @@map("notifications")
+}
