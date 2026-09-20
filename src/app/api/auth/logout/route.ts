@@ -1,4 +1,5 @@
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse } from "next/server";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ const COOKIE_BASE_NAMES = [
   "authjs.state",
 ];
 
-export async function GET(request: NextRequest) {
+export async function GET(request: Request) {
   const namesToClear = new Set<string>();
 
   // 1. Add all base auth cookie names and their chunk variations (.0 to .9)
@@ -32,23 +33,31 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  // 2. Add any cookies present in request.cookies
-  for (const c of request.cookies.getAll()) {
-    namesToClear.add(c.name);
+  // 2. Add any cookies from next/headers
+  try {
+    const cookieStore = await cookies();
+    const all = cookieStore.getAll();
+    for (const c of all) {
+      namesToClear.add(c.name);
+    }
+  } catch (err) {
+    // cookies() store might fail if outside standard context
   }
 
   // 3. Add any cookies parsed directly from raw cookie header
-  const rawCookieHeader = request.headers.get("cookie");
-  if (rawCookieHeader) {
-    const parts = rawCookieHeader.split(";");
-    for (const part of parts) {
-      const trimmed = part.trim();
-      const eqIdx = trimmed.indexOf("=");
-      if (eqIdx > 0) {
-        namesToClear.add(trimmed.slice(0, eqIdx).trim());
+  try {
+    const rawCookieHeader = request.headers.get("cookie");
+    if (rawCookieHeader) {
+      const parts = rawCookieHeader.split(";");
+      for (const part of parts) {
+        const trimmed = part.trim();
+        const eqIdx = trimmed.indexOf("=");
+        if (eqIdx > 0) {
+          namesToClear.add(trimmed.slice(0, eqIdx).trim());
+        }
       }
     }
-  }
+  } catch (err) {}
 
   const url = new URL("/login", request.url);
   const response = NextResponse.redirect(url, { status: 302 });
@@ -70,7 +79,7 @@ export async function GET(request: NextRequest) {
     });
   }
 
-  // Clear-Site-Data: "cookies" instructs the browser to purge all origin cookies
+  // Clear-Site-Data instructs the browser engine to wipe all cookies for this origin
   response.headers.set("Clear-Site-Data", '"cookies"');
   response.headers.set(
     "Cache-Control",

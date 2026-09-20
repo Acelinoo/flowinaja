@@ -1,7 +1,6 @@
 import React from "react";
 import { Workflow, AlertCircle, LogOut, ArrowRight, CheckCircle2 } from "lucide-react";
 import { auth, signIn } from "@/auth";
-import { logoutAction } from "@/actions/auth.actions";
 import Link from "next/link";
 
 interface LoginPageProps {
@@ -102,16 +101,14 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <span>Buka Dasbor</span>
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
-              <form action={logoutAction} className="shrink-0">
-                <button
-                  type="submit"
-                  className="py-1.5 px-3 rounded-md border border-red-200 dark:border-red-800/80 text-red-600 dark:text-red-400 bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
-                  title="Keluar dari sesi ini"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Keluar</span>
-                </button>
-              </form>
+              <a
+                href="/api/auth/logout"
+                className="py-1.5 px-3 rounded-md border border-red-200 dark:border-red-800/80 text-red-600 dark:text-red-400 bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium flex items-center gap-1.5 transition-colors cursor-pointer text-xs no-underline shrink-0"
+                title="Keluar dari sesi ini"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Keluar</span>
+              </a>
             </div>
           </div>
         )}

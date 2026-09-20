@@ -2,7 +2,6 @@
 
 import React, { useState } from "react";
 import { LogOut, AlertTriangle, X } from "lucide-react";
-import { logoutAction } from "@/actions/auth.actions";
 
 export function LogoutButton() {
   const [isOpen, setIsOpen] = useState(false);
@@ -60,15 +59,13 @@ export function LogoutButton() {
                 Batal
               </button>
 
-              <form action={logoutAction}>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-semibold rounded-md bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors inline-flex items-center gap-2 cursor-pointer border-0"
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Ya, Keluar Akun</span>
-                </button>
-              </form>
+              <a
+                href="/api/auth/logout"
+                className="px-4 py-2 text-xs font-semibold rounded-md bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors inline-flex items-center gap-2 cursor-pointer no-underline"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Ya, Keluar Akun</span>
+              </a>
             </div>
           </div>
         </div>
