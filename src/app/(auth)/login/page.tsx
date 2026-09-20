@@ -36,7 +36,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       case "Configuration":
         return "Konfigurasi autentikasi belum lengkap. Pastikan AUTH_SECRET, AUTH_GOOGLE_ID, dan AUTH_GOOGLE_SECRET telah disetel pada Environment Variables di Vercel/server.";
       case "AccessDenied":
-        return "Akses ditolak. Akun Anda belum diotorisasi atau belum terdaftar di Test Users Google Cloud.";
+        return "Akses ditolak. Kemungkinan penyebab: (1) Akun Google belum didaftarkan di 'Test users' Google Cloud Console, atau (2) Database PostgreSQL (DATABASE_URL) belum terhubung di Vercel.";
       case "OAuthSignin":
         return "Gagal menghubungkan ke Google OAuth. Pastikan Client ID dan Secret valid.";
       case "OAuthCallbackError":
