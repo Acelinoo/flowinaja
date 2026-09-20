@@ -1,27 +1,38 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import { LogOut, Loader2, AlertTriangle, X } from "lucide-react";
-import { logoutAction } from "@/actions/auth.actions";
-import { signOut as clientSignOut } from "next-auth/react";
 
 export function LogoutButton() {
   const [isOpen, setIsOpen] = useState(false);
-  const [isPending, startTransition] = useTransition();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   const handleLogout = () => {
-    startTransition(async () => {
-      try {
-        await logoutAction();
-      } catch {
-        // Fallback to client-side NextAuth signOut if server action redirect throws
-        try {
-          await clientSignOut({ callbackUrl: "/login", redirect: true });
-        } catch {
-          window.location.href = "/login";
+    setIsLoggingOut(true);
+
+    // 1. Purge client-side cookies directly in the browser
+    try {
+      const cookieList = document.cookie.split(";");
+      for (const cookie of cookieList) {
+        const eqPos = cookie.indexOf("=");
+        const name = eqPos > -1 ? cookie.substring(0, eqPos).trim() : cookie.trim();
+        if (
+          name.includes("authjs") ||
+          name.includes("next-auth") ||
+          name.includes("session") ||
+          name.includes("csrf")
+        ) {
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/;`;
+          document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/; domain=${window.location.hostname};`;
         }
       }
-    });
+    } catch {
+      // Ignore if document.cookie access is restricted
+    }
+
+    // 2. Direct HTTP navigation to /api/auth/logout which unconditionally
+    // deletes all session cookies via response headers and redirects to /login
+    window.location.href = "/api/auth/logout";
   };
 
   return (
@@ -56,8 +67,8 @@ export function LogoutButton() {
               </div>
               <button
                 type="button"
-                onClick={() => !isPending && setIsOpen(false)}
-                disabled={isPending}
+                onClick={() => !isLoggingOut && setIsOpen(false)}
+                disabled={isLoggingOut}
                 className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-1 rounded-md transition-colors"
                 aria-label="Tutup dialog"
               >
@@ -66,13 +77,13 @@ export function LogoutButton() {
             </div>
 
             <div className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed bg-slate-50 dark:bg-slate-800/50 p-3 rounded-lg border border-slate-100 dark:border-slate-800">
-              Apakah Anda yakin ingin keluar dari akun Anda? Seluruh token sesi akan dihapus dan Anda akan dialihkan kembali ke halaman masuk.
+              Apakah Anda yakin ingin keluar dari akun Anda? Seluruh token sesi akan dihapus dan Anda dapat memilih akun lain saat masuk kembali.
             </div>
 
             <div className="flex items-center justify-end gap-2.5 pt-2">
               <button
                 type="button"
-                disabled={isPending}
+                disabled={isLoggingOut}
                 onClick={() => setIsOpen(false)}
                 className="px-3.5 py-2 text-xs font-medium rounded-md border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors disabled:opacity-50 cursor-pointer"
               >
@@ -81,11 +92,11 @@ export function LogoutButton() {
 
               <button
                 type="button"
-                disabled={isPending}
+                disabled={isLoggingOut}
                 onClick={handleLogout}
                 className="px-4 py-2 text-xs font-semibold rounded-md bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors flex items-center gap-2 disabled:opacity-50 cursor-pointer"
               >
-                {isPending ? (
+                {isLoggingOut ? (
                   <>
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     <span>Mengakhiri Sesi...</span>

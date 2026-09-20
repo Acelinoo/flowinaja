@@ -84,7 +84,10 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           <form
             action={async () => {
               "use server";
-              await signIn("google", { redirectTo });
+              await signIn("google", {
+                redirectTo,
+                prompt: "select_account",
+              });
             }}
           >
             <button
