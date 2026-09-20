@@ -33,15 +33,20 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
 
   const getErrorMessage = (err: string) => {
     switch (err) {
+      case "Configuration":
+        return "Konfigurasi autentikasi belum lengkap. Pastikan AUTH_SECRET, AUTH_GOOGLE_ID, dan AUTH_GOOGLE_SECRET telah disetel pada Environment Variables di Vercel/server.";
       case "AccessDenied":
-        return "Akses ditolak. Akun Anda mungkin tidak aktif atau belum diotorisasi.";
+        return "Akses ditolak. Akun Anda belum diotorisasi atau belum terdaftar di Test Users Google Cloud.";
+      case "OAuthSignin":
+        return "Gagal menghubungkan ke Google OAuth. Pastikan Client ID dan Secret valid.";
+      case "OAuthCallbackError":
+        return "Gagal memproses respon Google OAuth. Pastikan Redirect URI di Google Cloud Console cocok.";
       case "OAuthAccountNotLinked":
         return "Akun dengan email ini sudah terdaftar menggunakan metode masuk lain.";
-      case "OAuthCallbackError":
       case "Callback":
         return "Autentikasi tidak dapat diselesaikan. Silakan coba kembali.";
       default:
-        return "Terjadi kendala pada proses autentikasi. Silakan coba kembali.";
+        return `Terjadi kendala pada proses autentikasi (${err}). Silakan coba kembali.`;
     }
   };
 
