@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Menu, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,19 @@ export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
         >
           <Menu className="w-5 h-5" />
         </button>
+
+        {/* Mobile Brand Logo */}
+        <Link href="/" className="lg:hidden flex items-center gap-1.5 shrink-0">
+          <div className="w-7 h-7 rounded-md overflow-hidden flex items-center justify-center border border-slate-200 dark:border-slate-700 bg-white shadow-xs">
+            <Image
+              src="/logo.png"
+              alt="Flowinaja"
+              width={28}
+              height={28}
+              className="w-full h-full object-contain p-0.5"
+            />
+          </div>
+        </Link>
 
         {/* Page Breadcrumb & Title */}
         <div className="flex items-center gap-2">

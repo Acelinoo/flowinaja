@@ -2,6 +2,7 @@
 
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -19,6 +20,7 @@ import {
   Workflow,
   User as UserIcon,
   LogOut,
+  ExternalLink,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { CurrentUserContext } from "@/types";
@@ -117,11 +119,18 @@ export function Sidebar({ user, onNavClick, className }: SidebarProps) {
       <div className="h-14 flex items-center justify-between px-4 border-b border-slate-200 dark:border-slate-800">
         <Link
           href="/"
-          className="flex items-center gap-2.5 font-bold tracking-tight text-slate-900 dark:text-slate-100"
+          className="flex items-center gap-2.5 font-bold tracking-tight text-slate-900 dark:text-slate-100 group"
           onClick={onNavClick}
         >
-          <div className="w-7 h-7 rounded bg-blue-700 text-white flex items-center justify-center font-bold text-sm shadow-xs">
-            <Workflow className="w-4 h-4" />
+          <div className="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center border border-slate-200/80 dark:border-slate-700/80 bg-white shadow-xs shrink-0 group-hover:border-blue-500 transition-colors">
+            <Image
+              src="/logo.png"
+              alt="Flowinaja"
+              width={32}
+              height={32}
+              className="w-full h-full object-contain p-0.5"
+              priority
+            />
           </div>
           <span className="text-base tracking-tight font-semibold">Flowinaja</span>
         </Link>
@@ -225,7 +234,7 @@ export function Sidebar({ user, onNavClick, className }: SidebarProps) {
           </div>
         </div>
 
-        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
+        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80 space-y-2">
           <a
             href="/logout"
             className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-colors cursor-pointer no-underline"
@@ -234,6 +243,21 @@ export function Sidebar({ user, onNavClick, className }: SidebarProps) {
             <LogOut className="w-3.5 h-3.5" />
             <span>Keluar Akun</span>
           </a>
+
+          {/* Watermark / Creator Attribution */}
+          <div className="pt-1.5 px-2 border-t border-slate-100 dark:border-slate-800/60 flex items-center justify-between text-[11px] text-slate-400 dark:text-slate-500 select-none">
+            <span>Dibuat oleh</span>
+            <a
+              href="https://acelino.my.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-slate-600 hover:text-blue-600 dark:text-slate-300 dark:hover:text-blue-400 transition-colors inline-flex items-center gap-1 group"
+              title="Kunjungi acelino.my.id"
+            >
+              <span>acelino.my.id</span>
+              <ExternalLink className="w-3 h-3 text-slate-400 group-hover:text-blue-500 transition-colors" />
+            </a>
+          </div>
         </div>
       </div>
     </aside>

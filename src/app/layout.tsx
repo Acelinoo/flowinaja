@@ -13,9 +13,37 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || "https://flowinaja.vercel.app"),
   title: "Flowinaja — Platform Permintaan & Persetujuan Internal",
   description:
-    "Platform alur kerja internal berorientasi produksi untuk mengelola permintaan, persetujuan bertahap, dan jejak audit operasional organisasi.",
+    "Platform alur kerja internal berorientasi produksi untuk mengelola permintaan, persetujuan bertahap, dan jejak audit operasional organisasi buatan acelino.my.id.",
+  icons: {
+    icon: [
+      { url: "/icon.png", type: "image/png" },
+      { url: "/favicon.ico" },
+    ],
+    apple: [
+      { url: "/apple-icon.png", type: "image/png" },
+    ],
+  },
+  openGraph: {
+    title: "Flowinaja — Platform Permintaan & Persetujuan Internal",
+    description: "Platform alur kerja internal berorientasi produksi buatan acelino.my.id",
+    url: "https://flowinaja.vercel.app",
+    siteName: "Flowinaja",
+    images: [
+      {
+        url: "/logo.png",
+        width: 512,
+        height: 512,
+        alt: "Flowinaja Logo",
+      },
+    ],
+    locale: "id_ID",
+    type: "website",
+  },
+  authors: [{ name: "Acelino", url: "https://acelino.my.id" }],
+  creator: "acelino.my.id",
 };
 
 export default function RootLayout({

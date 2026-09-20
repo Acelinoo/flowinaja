@@ -1,5 +1,6 @@
 import React from "react";
-import { Workflow, AlertCircle, LogOut, ArrowRight, CheckCircle2 } from "lucide-react";
+import Image from "next/image";
+import { Workflow, AlertCircle, LogOut, ArrowRight, CheckCircle2, ExternalLink } from "lucide-react";
 import { auth, signIn } from "@/auth";
 import Link from "next/link";
 
@@ -56,8 +57,15 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
       <div className="w-full max-w-sm space-y-6">
         {/* Brand & Header */}
         <div className="flex flex-col items-center text-center space-y-2">
-          <div className="w-10 h-10 rounded-lg bg-blue-700 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            <Workflow className="w-6 h-6" />
+          <div className="w-14 h-14 rounded-2xl overflow-hidden flex items-center justify-center border border-slate-200/80 dark:border-slate-800 bg-white shadow-xs p-1">
+            <Image
+              src="/logo.png"
+              alt="Flowinaja"
+              width={56}
+              height={56}
+              className="w-full h-full object-contain"
+              priority
+            />
           </div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
             Flowinaja
@@ -187,9 +195,21 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         </div>
 
-        {/* Footer info */}
-        <div className="text-center text-[11px] text-slate-400">
-          Flowinaja &bull; Tata Kelola Alur Kerja &amp; Identitas Produksi
+        {/* Footer info & watermark */}
+        <div className="text-center text-[11px] text-slate-400 dark:text-slate-500 space-y-1.5 select-none">
+          <p>Flowinaja &bull; Tata Kelola Alur Kerja &amp; Identitas Produksi</p>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1">
+            <span>Dibuat oleh</span>
+            <a
+              href="https://acelino.my.id"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 underline decoration-blue-300 dark:decoration-blue-700 transition-colors inline-flex items-center gap-0.5"
+            >
+              <span>acelino.my.id</span>
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </p>
         </div>
       </div>
     </div>
