@@ -73,16 +73,14 @@ export const authConfig: NextAuthConfig = {
       const isPublic =
         pathname === "/login" ||
         pathname.startsWith("/api/auth") ||
+        pathname === "/api/sync" ||
         pathname === "/api/health";
 
       if (!isLoggedIn && !isPublic) {
         return false; // Automatically redirects to pages.signIn ("/login")
       }
 
-      if (isLoggedIn && pathname === "/login") {
-        return Response.redirect(new URL("/", nextUrl));
-      }
-
+      // Allow /login to render so user can see account status, switch accounts, or log out
       return true;
     },
   },

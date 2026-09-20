@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import { CurrentUserContext } from "@/types";
 import { UserRole } from "@prisma/client";
+import { logoutAction } from "@/actions/auth.actions";
 
 interface SidebarProps {
   user: CurrentUserContext;
@@ -226,14 +227,16 @@ export function Sidebar({ user, onNavClick, className }: SidebarProps) {
         </div>
 
         <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
-          <a
-            href="/api/auth/logout"
-            className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-colors cursor-pointer"
-            title="Keluar dari akun"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Keluar Akun</span>
-          </a>
+          <form action={logoutAction}>
+            <button
+              type="submit"
+              className="w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-colors cursor-pointer bg-transparent border-0 text-left"
+              title="Keluar dari akun"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>Keluar Akun</span>
+            </button>
+          </form>
         </div>
       </div>
     </aside>

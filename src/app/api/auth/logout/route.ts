@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
+import { NextResponse, type NextRequest } from "next/server";
 
 export const dynamic = "force-dynamic";
 
-const COOKIE_NAMES = [
+const COOKIE_BASE_NAMES = [
   "__Secure-authjs.session-token",
   "authjs.session-token",
   "__Secure-next-auth.session-token",
@@ -18,71 +17,69 @@ const COOKIE_NAMES = [
   "next-auth.callback-url",
   "__Secure-authjs.pkce.code_verifier",
   "authjs.pkce.code_verifier",
-  "__Secure-next-auth.pkce.code_verifier",
-  "next-auth.pkce.code_verifier",
   "__Secure-authjs.state",
   "authjs.state",
 ];
 
-async function handleLogout(request: Request) {
-  const cookieStore = await cookies();
-  const allExistingCookies = cookieStore.getAll();
+export async function GET(request: NextRequest) {
+  const namesToClear = new Set<string>();
 
-  const namesToClear = new Set<string>(COOKIE_NAMES);
-  for (const c of allExistingCookies) {
-    if (
-      c.name.includes("authjs") ||
-      c.name.includes("next-auth") ||
-      c.name.includes("session") ||
-      c.name.includes("csrf") ||
-      c.name.includes("token")
-    ) {
-      namesToClear.add(c.name);
+  // 1. Add all base auth cookie names and their chunk variations (.0 to .9)
+  for (const base of COOKIE_BASE_NAMES) {
+    namesToClear.add(base);
+    for (let i = 0; i <= 9; i++) {
+      namesToClear.add(`${base}.${i}`);
+    }
+  }
+
+  // 2. Add any cookies present in request.cookies
+  for (const c of request.cookies.getAll()) {
+    namesToClear.add(c.name);
+  }
+
+  // 3. Add any cookies parsed directly from raw cookie header
+  const rawCookieHeader = request.headers.get("cookie");
+  if (rawCookieHeader) {
+    const parts = rawCookieHeader.split(";");
+    for (const part of parts) {
+      const trimmed = part.trim();
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx > 0) {
+        namesToClear.add(trimmed.slice(0, eqIdx).trim());
+      }
     }
   }
 
   const url = new URL("/login", request.url);
   const response = NextResponse.redirect(url, { status: 302 });
 
-  for (const name of namesToClear) {
-    cookieStore.delete(name);
+  const isHttps =
+    request.url.startsWith("https") ||
+    request.headers.get("x-forwarded-proto") === "https" ||
+    process.env.NODE_ENV === "production";
 
-    // 1. Next.js response.cookies.set with Secure and HttpOnly
+  for (const name of namesToClear) {
+    const isSecure = name.startsWith("__Secure-") || name.startsWith("__Host-") || isHttps;
     response.cookies.set(name, "", {
       expires: new Date(0),
       maxAge: 0,
       path: "/",
       httpOnly: true,
-      secure: true,
+      secure: isSecure,
       sameSite: "lax",
     });
-
-    // 2. Also set without Secure for localhost/HTTP compatibility
-    if (!name.startsWith("__Secure-") && !name.startsWith("__Host-")) {
-      response.cookies.set(name, "", {
-        expires: new Date(0),
-        maxAge: 0,
-        path: "/",
-        httpOnly: true,
-        secure: false,
-        sameSite: "lax",
-      });
-    }
-
-    // 3. Raw Set-Cookie header for absolute browser compliance (RFC 6265bis)
-    response.headers.append(
-      "Set-Cookie",
-      `${name}=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Max-Age=0; HttpOnly; Secure; SameSite=Lax`
-    );
   }
 
-  // Prevent browser from caching this redirect
-  response.headers.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  // Clear-Site-Data: "cookies" instructs the browser to purge all origin cookies
+  response.headers.set("Clear-Site-Data", '"cookies"');
+  response.headers.set(
+    "Cache-Control",
+    "no-store, no-cache, must-revalidate, proxy-revalidate"
+  );
   response.headers.set("Pragma", "no-cache");
   response.headers.set("Expires", "0");
 
   return response;
 }
 
-export const GET = handleLogout;
-export const POST = handleLogout;
+export const POST = GET;

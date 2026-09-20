@@ -1,6 +1,8 @@
 import React from "react";
-import { Workflow, AlertCircle } from "lucide-react";
-import { signIn } from "@/auth";
+import { Workflow, AlertCircle, LogOut, ArrowRight, CheckCircle2 } from "lucide-react";
+import { auth, signIn } from "@/auth";
+import { logoutAction } from "@/actions/auth.actions";
+import Link from "next/link";
 
 interface LoginPageProps {
   searchParams: Promise<{
@@ -11,7 +13,6 @@ interface LoginPageProps {
 
 function getSafeRedirectUrl(url?: string): string {
   if (!url) return "/";
-  // Safe relative paths starting with single '/'
   if (url.startsWith("/") && !url.startsWith("//")) {
     return url;
   }
@@ -30,6 +31,7 @@ function getSafeRedirectUrl(url?: string): string {
 export default async function LoginPage({ searchParams }: LoginPageProps) {
   const { error, callbackUrl } = await searchParams;
   const redirectTo = getSafeRedirectUrl(callbackUrl);
+  const session = await auth();
 
   const getErrorMessage = (err: string) => {
     switch (err) {
@@ -74,20 +76,59 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
           </div>
         )}
 
+        {/* Active Session Card (if user is already logged in) */}
+        {session?.user && (
+          <div className="p-3.5 rounded-lg bg-blue-50/90 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-900/60 space-y-2.5 text-xs">
+            <div className="flex items-start gap-2.5">
+              <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+              <div className="space-y-0.5 min-w-0 flex-1">
+                <p className="text-[11px] uppercase tracking-wider font-semibold text-slate-400 dark:text-slate-400">
+                  Sesi Aktif Saat Ini
+                </p>
+                <p className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                  {session.user.name || "Pengguna"}
+                </p>
+                <p className="text-slate-600 dark:text-slate-400 text-[11px] truncate">
+                  {session.user.email} &bull; Peran: <span className="font-bold text-blue-700 dark:text-blue-300">{session.user.role}</span>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2 pt-1">
+              <Link
+                href="/"
+                className="flex-1 py-1.5 px-3 rounded-md bg-blue-600 hover:bg-blue-700 text-white font-medium text-center flex items-center justify-center gap-1.5 transition-colors no-underline text-xs"
+              >
+                <span>Buka Dasbor</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <form action={logoutAction} className="shrink-0">
+                <button
+                  type="submit"
+                  className="py-1.5 px-3 rounded-md border border-red-200 dark:border-red-800/80 text-red-600 dark:text-red-400 bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium flex items-center gap-1.5 transition-colors cursor-pointer text-xs"
+                  title="Keluar dari sesi ini"
+                >
+                  <LogOut className="w-3.5 h-3.5" />
+                  <span>Keluar</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        )}
+
         {/* Login Box */}
         <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-xs dark:border-slate-800 dark:bg-slate-900 space-y-3">
           <div className="text-xs font-medium text-slate-500 text-center mb-4">
-            Masuk dengan akun organisasi Anda
+            {session?.user
+              ? "Beralih akun atau masuk dengan profil lain"
+              : "Masuk dengan akun organisasi Anda"}
           </div>
 
           {/* Google OAuth Form */}
           <form
             action={async () => {
               "use server";
-              await signIn("google", {
-                redirectTo,
-                prompt: "select_account",
-              });
+              await signIn("google", { redirectTo }, { prompt: "select_account" });
             }}
           >
             <button
@@ -112,7 +153,11 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                   d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.33 0 3.26 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
                 />
               </svg>
-              <span>Lanjutkan dengan Google</span>
+              <span>
+                {session?.user
+                  ? "Beralih / Masuk dengan Akun Google Lain"
+                  : "Lanjutkan dengan Google"}
+              </span>
             </button>
           </form>
 

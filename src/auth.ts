@@ -30,6 +30,17 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             return false;
           }
 
+          // Guarantee admin role for primary administrative email
+          if (
+            normalizedEmail === "marchelinokurniawan321@gmail.com" &&
+            dbUser.role !== UserRole.ADMIN
+          ) {
+            await prisma.user.update({
+              where: { id: dbUser.id },
+              data: { role: UserRole.ADMIN },
+            });
+          }
+
           // Link OAuth account if not previously stored
           if (account) {
             const existingAccount = await prisma.account.findUnique({
@@ -90,7 +101,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           });
         }
 
-        const assignedRole: UserRole = totalUsers === 0 ? UserRole.ADMIN : UserRole.EMPLOYEE;
+        const isAdminEmail = normalizedEmail === "marchelinokurniawan321@gmail.com";
+        const assignedRole: UserRole =
+          totalUsers === 0 || isAdminEmail ? UserRole.ADMIN : UserRole.EMPLOYEE;
 
         const newUser = await prisma.user.create({
           data: {
@@ -139,7 +152,10 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
 
         if (dbUser) {
           token.id = dbUser.id;
-          token.role = dbUser.role;
+          token.role =
+            dbUser.email.toLowerCase() === "marchelinokurniawan321@gmail.com"
+              ? UserRole.ADMIN
+              : dbUser.role;
           token.organizationId = dbUser.organizationId;
           token.organizationName = dbUser.organization.name;
           token.departmentId = dbUser.departmentId;
