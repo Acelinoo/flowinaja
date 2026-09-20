@@ -76,7 +76,7 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
   const isEligibleApprover = Boolean(
     request.status === "IN_REVIEW" &&
       activePendingApproval &&
-      activePendingApproval.approvalStep?.roleRequired === user.role &&
+      (activePendingApproval.approvalStep?.roleRequired === user.role || user.role === UserRole.ADMIN) &&
       user.organizationId === request.organizationId
   );
 

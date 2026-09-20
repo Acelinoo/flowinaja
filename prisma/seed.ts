@@ -7,11 +7,11 @@ async function main() {
 
   // 1. Seed Default Organization
   const org = await prisma.organization.upsert({
-    where: { slug: "demo-org" },
-    update: {},
+    where: { slug: "gerobaklink" },
+    update: { name: "Gerobaklink" },
     create: {
-      name: "Demo Organization",
-      slug: "demo-org",
+      name: "Gerobaklink",
+      slug: "gerobaklink",
     },
   });
   console.log(`✓ Organization: ${org.name} (${org.id})`);

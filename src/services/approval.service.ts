@@ -5,6 +5,7 @@ import {
   ActivityAction,
   NotificationType,
   Prisma,
+  UserRole,
 } from "@prisma/client";
 import { NotificationService } from "@/services/notification.service";
 import { CurrentUserContext } from "@/types";
@@ -124,15 +125,18 @@ export class ApprovalService {
         throw new Error("403 Forbidden: Cross-organization approval operation denied");
       }
 
-      // 7. Strict Server-Side Role Matching (No hierarchical bypass)
+      // 7. Role Matching or Administrative Authority
       const requiredRole = approval.approvalStep?.roleRequired;
       if (!requiredRole) {
         throw new Error("500 Internal Error: Approval step configuration missing required role");
       }
 
-      if (actor.role !== requiredRole) {
+      const isExactRole = actor.role === requiredRole;
+      const isAdminAuthority = actor.role === UserRole.ADMIN;
+
+      if (!isExactRole && !isAdminAuthority) {
         throw new Error(
-          `403 Forbidden: Role mismatch. Required role is '${requiredRole}', but your role is '${actor.role}'. Automatic role escalation is not permitted.`
+          `403 Forbidden: Role mismatch. Required role is '${requiredRole}', but your role is '${actor.role}'.`
         );
       }
 
@@ -445,9 +449,13 @@ export class ApprovalService {
 
     const where: Prisma.ApprovalWhereInput = {
       status: ApprovalStatus.PENDING,
-      approvalStep: {
-        roleRequired: actor.role,
-      },
+      ...(actor.role === UserRole.ADMIN
+        ? {}
+        : {
+            approvalStep: {
+              roleRequired: actor.role,
+            },
+          }),
       request: {
         organizationId: actor.organizationId,
         status: RequestStatus.IN_REVIEW,

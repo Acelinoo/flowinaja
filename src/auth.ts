@@ -84,8 +84,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         if (!defaultOrg) {
           defaultOrg = await prisma.organization.create({
             data: {
-              name: "Demo Organization",
-              slug: "demo-org",
+              name: "Gerobaklink",
+              slug: "gerobaklink",
             },
           });
         }
@@ -156,7 +156,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         session.user.id = (token.id as string) || session.user.id;
         session.user.role = (token.role as UserRole) || UserRole.EMPLOYEE;
         session.user.organizationId = (token.organizationId as string) || "";
-        session.user.organizationName = (token.organizationName as string) || "Organization";
+        session.user.organizationName = (token.organizationName as string) || "Gerobaklink";
         session.user.departmentId = (token.departmentId as string) || null;
         session.user.departmentName = (token.departmentName as string) || null;
         session.user.isActive = token.isActive !== false;
