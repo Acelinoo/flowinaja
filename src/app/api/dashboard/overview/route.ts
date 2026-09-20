@@ -22,8 +22,15 @@ export async function GET(request: NextRequest) {
       data,
     });
   } catch (error: unknown) {
+    const rawMessage = error instanceof Error ? error.message : "";
+    const isClientSafe =
+      rawMessage &&
+      !rawMessage.toLowerCase().includes("prisma") &&
+      !rawMessage.toLowerCase().includes("database") &&
+      !rawMessage.toLowerCase().includes("select") &&
+      !rawMessage.toLowerCase().includes("foreign key");
     return NextResponse.json(
-      { error: (error as Error).message || "Gagal memuat data dasbor" },
+      { error: isClientSafe ? rawMessage : "Terjadi kendala saat memuat data dasbor" },
       { status: 500 }
     );
   }
