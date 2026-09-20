@@ -11,16 +11,16 @@ export default function NotFound() {
           <AlertCircle className="w-6 h-6" />
         </div>
         <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
-          Page Not Found
+          Halaman Tidak Ditemukan
         </h2>
         <p className="text-xs text-slate-500 dark:text-slate-400">
-          The requested page or internal resource does not exist in Flowinaja.
+          Halaman atau sumber daya internal yang Anda cari tidak tersedia di Flowinaja.
         </p>
         <div>
           <Link href="/">
             <Button size="sm">
               <ArrowLeft className="w-3.5 h-3.5" />
-              Return to Overview
+              Kembali ke Dasbor
             </Button>
           </Link>
         </div>

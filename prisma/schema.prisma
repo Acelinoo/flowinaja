@@ -48,9 +48,22 @@ enum ApprovalStatus {
   REVISION_REQUESTED
 }
 
+enum NotificationType {
+  APPROVAL_PENDING
+  REQUEST_APPROVED
+  REQUEST_REJECTED
+  REVISION_REQUESTED
+  REQUEST_PROCESSING
+  REQUEST_COMPLETED
+  REQUEST_CANCELLED
+}
+
 enum ActivityAction {
   REQUEST_CREATED
+  REQUEST_UPDATED
   REQUEST_SUBMITTED
+  REQUEST_RESUBMITTED
+  APPROVAL_APPROVED
   REQUEST_APPROVED
   REQUEST_REJECTED
   REVISION_REQUESTED
@@ -79,6 +92,7 @@ model Organization {
   requests     Request[]
   activityLogs ActivityLog[]
   notifications Notification[]
+  notificationPreferences NotificationPreference[]
 
   @@map("organizations")
 }
@@ -107,6 +121,7 @@ model User {
   departmentId   String?
   name           String
   email          String       @unique
+  emailVerified  DateTime?
   role           UserRole     @default(EMPLOYEE)
   avatarUrl      String?
   isActive       Boolean      @default(true)
@@ -114,16 +129,39 @@ model User {
   updatedAt      DateTime     @updatedAt
 
   // Relationships
-  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  department   Department?  @relation(fields: [departmentId], references: [id], onDelete: SetNull)
-  requests     Request[]    @relation("UserRequests")
-  approvals    Approval[]   @relation("UserApprovals")
-  activityLogs ActivityLog[] @relation("UserActivities")
+  organization  Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department    Department?    @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+  accounts      Account[]
+  requests      Request[]      @relation("UserRequests")
+  approvals     Approval[]     @relation("UserApprovals")
+  activityLogs  ActivityLog[]  @relation("UserActivities")
   notifications Notification[] @relation("UserNotifications")
+  notificationPreference NotificationPreference?
 
   @@index([organizationId])
   @@index([departmentId])
   @@map("users")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String? @db.Text
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+  @@index([userId])
+  @@map("accounts")
 }
 
 model RequestType {
@@ -175,7 +213,9 @@ model Request {
   description      String
   status           RequestStatus   @default(DRAFT)
   currentStepOrder Int             @default(1)
+  currentCycle     Int             @default(1)
   priority         RequestPriority @default(NORMAL)
+  metadata         Json?
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
@@ -200,6 +240,7 @@ model Approval {
   requestId      String
   approvalStepId String?
   approverId     String?
+  cycle          Int            @default(1)
   stepOrder      Int
   status         ApprovalStatus @default(PENDING)
   comment        String?
@@ -212,7 +253,9 @@ model Approval {
   approvalStep ApprovalStep? @relation(fields: [approvalStepId], references: [id], onDelete: SetNull)
   approver     User?         @relation("UserApprovals", fields: [approverId], references: [id], onDelete: SetNull)
 
+  @@unique([requestId, cycle, stepOrder])
   @@index([requestId])
+  @@index([requestId, cycle])
   @@index([approverId])
   @@index([status])
   @@map("approvals")
@@ -239,15 +282,20 @@ model ActivityLog {
 }
 
 model Notification {
-  id             String    @id @default(cuid())
+  id             String           @id @default(cuid())
   organizationId String
   recipientId    String
   requestId      String?
+  type           NotificationType @default(APPROVAL_PENDING)
   title          String
   message        String
-  isRead         Boolean   @default(false)
+  cycle          Int?
+  stepOrder      Int?
+  dedupeKey      String?          @unique
+  isRead         Boolean          @default(false)
   readAt         DateTime?
-  createdAt      DateTime  @default(now())
+  metadata       Json?
+  createdAt      DateTime         @default(now())
 
   // Relationships
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -255,6 +303,25 @@ model Notification {
   request      Request?     @relation(fields: [requestId], references: [id], onDelete: SetNull)
 
   @@index([recipientId, isRead])
-  @@index([organizationId])
+  @@index([organizationId, recipientId, isRead])
+  @@index([organizationId, createdAt])
   @@map("notifications")
+}
+
+model NotificationPreference {
+  id                String   @id @default(cuid())
+  userId            String   @unique
+  organizationId    String
+  approvalPending   Boolean  @default(true)
+  requestUpdates    Boolean  @default(true)
+  processingUpdates Boolean  @default(true)
+  completionUpdates Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@map("notification_preferences")
 }

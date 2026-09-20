@@ -3,19 +3,21 @@
 import React, { useState } from "react";
 import { Sidebar } from "./sidebar";
 import { Topbar } from "./topbar";
+import { CurrentUserContext } from "@/types";
 
 interface AppShellProps {
   children: React.ReactNode;
+  user: CurrentUserContext;
 }
 
-export function AppShell({ children }: AppShellProps) {
+export function AppShell({ children, user }: AppShellProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
       {/* Desktop Sidebar */}
       <div className="hidden lg:flex flex-col shrink-0">
-        <Sidebar className="h-full" />
+        <Sidebar user={user} className="h-full" />
       </div>
 
       {/* Mobile Drawer Backdrop */}
@@ -32,12 +34,16 @@ export function AppShell({ children }: AppShellProps) {
           mobileOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
-        <Sidebar onNavClick={() => setMobileOpen(false)} className="h-full shadow-xl" />
+        <Sidebar
+          user={user}
+          onNavClick={() => setMobileOpen(false)}
+          className="h-full shadow-xl"
+        />
       </div>
 
       {/* Main Content Viewport */}
       <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
-        <Topbar onToggleMobileMenu={() => setMobileOpen(!mobileOpen)} />
+        <Topbar user={user} onToggleMobileMenu={() => setMobileOpen(!mobileOpen)} />
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
           <div className="max-w-6xl mx-auto w-full">
             {children}

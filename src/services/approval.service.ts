@@ -1,22 +1,35 @@
 import { prisma } from "@/lib/prisma";
-import { ApprovalStatus } from "@prisma/client";
+import {
+  ApprovalStatus,
+  RequestStatus,
+  ActivityAction,
+  NotificationType,
+  Prisma,
+} from "@prisma/client";
+import { NotificationService } from "@/services/notification.service";
+import { CurrentUserContext } from "@/types";
 
-export interface RecordApprovalInput {
+export interface DecideApprovalInput {
   organizationId: string;
   requestId: string;
-  approvalStepId?: string;
-  approverId: string;
-  stepOrder: number;
-  status: ApprovalStatus;
+  approvalId: string;
+  decision: "APPROVE" | "REJECT" | "REQUEST_REVISION";
   comment?: string;
+  actor: CurrentUserContext;
+}
+
+export interface GetPendingApprovalsParams {
+  actor: CurrentUserContext;
+  page?: number;
+  limit?: number;
+  search?: string;
 }
 
 export class ApprovalService {
   /**
-   * Retrieves all immutable approval records for a given request within an organization.
+   * Retrieves all sequential approval records for a given request within an organization.
    */
   static async getApprovalsByRequestId(organizationId: string, requestId: string) {
-    // Validate request ownership in organization
     const req = await prisma.request.findFirst({
       where: { id: requestId, organizationId },
       select: { id: true },
@@ -34,41 +47,461 @@ export class ApprovalService {
         },
         approvalStep: true,
       },
-      orderBy: { stepOrder: "asc" },
+      orderBy: [{ cycle: "asc" }, { stepOrder: "asc" }],
     });
   }
 
   /**
-   * Records an approval decision, creating an immutable history entry.
-   * Approval history is preserved and never overwritten.
+   * Executes an atomic approval decision inside a strict Prisma transaction.
+   * Enforces server-side exact role authorization, request status lifecycle guards,
+   * single-step sequential activation, and immutable audit logging.
    */
-  static async recordApprovalDecision(input: RecordApprovalInput) {
-    const { organizationId, requestId, approvalStepId, approverId, stepOrder, status, comment } = input;
+  static async decideApproval(input: DecideApprovalInput) {
+    const { organizationId, requestId, approvalId, decision, comment, actor } = input;
 
-    // Verify request exists in organization
-    const targetRequest = await prisma.request.findFirst({
-      where: { id: requestId, organizationId },
+    // Run within interactive transaction to guarantee ACID consistency and prevent race conditions
+    return prisma.$transaction(async (tx) => {
+      // 1. Fetch request with full type and approval steps configuration
+      const request = await tx.request.findFirst({
+        where: {
+          id: requestId,
+          organizationId,
+        },
+        include: {
+          requestType: {
+            include: {
+              approvalSteps: {
+                orderBy: { stepOrder: "asc" },
+              },
+            },
+          },
+        },
+      });
+
+      if (!request) {
+        throw new Error("404 Not Found: Request not found in organization");
+      }
+
+      // 2. Lifecycle guard: Request must be currently IN_REVIEW
+      if (request.status !== RequestStatus.IN_REVIEW) {
+        throw new Error(
+          `400 Bad Request: Cannot decide approval for request in '${request.status}' status. Only requests in IN_REVIEW status can be approved/rejected.`
+        );
+      }
+
+      // 3. Fetch specific approval record
+      const approval = await tx.approval.findFirst({
+        where: {
+          id: approvalId,
+          requestId,
+          cycle: request.currentCycle,
+        },
+        include: {
+          approvalStep: true,
+        },
+      });
+
+      if (!approval) {
+        throw new Error("404 Not Found: Approval record not found for this request");
+      }
+
+      // 4. Stale approval guard: Must be PENDING
+      if (approval.status !== ApprovalStatus.PENDING) {
+        throw new Error(
+          `400 Bad Request: This approval step has already been decided (${approval.status})`
+        );
+      }
+
+      // 5. Active step guard: Must match the currentStepOrder of the request
+      if (approval.stepOrder !== request.currentStepOrder) {
+        throw new Error(
+          `400 Bad Request: Approval step (${approval.stepOrder}) does not match current active workflow step (${request.currentStepOrder})`
+        );
+      }
+
+      // 6. Organization isolation check
+      if (actor.organizationId !== organizationId || actor.organizationId !== request.organizationId) {
+        throw new Error("403 Forbidden: Cross-organization approval operation denied");
+      }
+
+      // 7. Strict Server-Side Role Matching (No hierarchical bypass)
+      const requiredRole = approval.approvalStep?.roleRequired;
+      if (!requiredRole) {
+        throw new Error("500 Internal Error: Approval step configuration missing required role");
+      }
+
+      if (actor.role !== requiredRole) {
+        throw new Error(
+          `403 Forbidden: Role mismatch. Required role is '${requiredRole}', but your role is '${actor.role}'. Automatic role escalation is not permitted.`
+        );
+      }
+
+      // 8. Comment validation
+      const cleanComment = (comment || "").trim();
+      if (decision === "REJECT" && cleanComment.length < 5) {
+        throw new Error("Validation Error: A clear rejection reason is required (minimum 5 characters)");
+      }
+      if (decision === "REQUEST_REVISION" && cleanComment.length < 5) {
+        throw new Error("Validation Error: A clear revision request reason is required (minimum 5 characters)");
+      }
+
+      // 9. Execute Decision Logic
+      if (decision === "APPROVE") {
+        // Mark current approval step as APPROVED with atomic concurrency condition
+        const approvalUpdate = await tx.approval.updateMany({
+          where: {
+            id: approval.id,
+            status: ApprovalStatus.PENDING,
+          },
+          data: {
+            status: ApprovalStatus.APPROVED,
+            approverId: actor.id,
+            comment: cleanComment || null,
+            decidedAt: new Date(),
+          },
+        });
+
+        if (approvalUpdate.count === 0) {
+          throw new Error(
+            "409 Conflict: This approval step has already been decided or modified concurrently"
+          );
+        }
+
+        const updatedApproval = await tx.approval.findUnique({
+          where: { id: approval.id },
+        });
+
+        // Determine next sequential step
+        const allSteps = request.requestType.approvalSteps;
+        const nextStep = allSteps.find((s) => s.stepOrder > approval.stepOrder);
+
+        if (nextStep && !approval.approvalStep?.isFinal) {
+          // Advance request to next step, keep status IN_REVIEW
+          const reqUpdate = await tx.request.updateMany({
+            where: {
+              id: request.id,
+              organizationId,
+              status: RequestStatus.IN_REVIEW,
+              currentCycle: request.currentCycle,
+              currentStepOrder: approval.stepOrder,
+            },
+            data: {
+              currentStepOrder: nextStep.stepOrder,
+            },
+          });
+
+          if (reqUpdate.count === 0) {
+            throw new Error(
+              "409 Conflict: Request workflow state was modified concurrently"
+            );
+          }
+
+          // Activate/create ONLY the next approval step record for the current cycle
+          await tx.approval.create({
+            data: {
+              requestId: request.id,
+              cycle: request.currentCycle,
+              approvalStepId: nextStep.id,
+              stepOrder: nextStep.stepOrder,
+              status: ApprovalStatus.PENDING,
+            },
+          });
+
+          // Log intermediate step approval event
+          await tx.activityLog.create({
+            data: {
+              organizationId,
+              requestId: request.id,
+              actorId: actor.id,
+              action: ActivityAction.APPROVAL_APPROVED,
+              details: `Step ${approval.stepOrder} (${approval.approvalStep?.title}) approved by ${actor.name} [${actor.role}]. Workflow advanced to Step ${nextStep.stepOrder} (${nextStep.title}) [${nextStep.roleRequired}].${cleanComment ? ` Note: "${cleanComment}"` : ""}`,
+            },
+          });
+
+          // Dispatch approval notifications to next step approvers inside transaction
+          await NotificationService.dispatchApprovalPendingNotifications(
+            {
+              id: request.id,
+              title: request.title,
+              organizationId,
+              requesterId: request.requesterId,
+              currentCycle: request.currentCycle,
+              currentStepOrder: nextStep.stepOrder,
+            },
+            tx
+          );
+        } else {
+          // This was the final step: finalize request as APPROVED
+          const reqUpdate = await tx.request.updateMany({
+            where: {
+              id: request.id,
+              organizationId,
+              status: RequestStatus.IN_REVIEW,
+              currentCycle: request.currentCycle,
+              currentStepOrder: approval.stepOrder,
+            },
+            data: {
+              status: RequestStatus.APPROVED,
+            },
+          });
+
+          if (reqUpdate.count === 0) {
+            throw new Error(
+              "409 Conflict: Request workflow state was modified concurrently"
+            );
+          }
+
+          // Log final request approval event
+          await tx.activityLog.create({
+            data: {
+              organizationId,
+              requestId: request.id,
+              actorId: actor.id,
+              action: ActivityAction.REQUEST_APPROVED,
+              details: `Final approval granted at Step ${approval.stepOrder} (${approval.approvalStep?.title}) by ${actor.name} [${actor.role}]. Request is fully APPROVED.${cleanComment ? ` Note: "${cleanComment}"` : ""}`,
+            },
+          });
+
+          // Dispatch final approval notification to requester inside transaction
+          await NotificationService.dispatchLifecycleNotification(
+            {
+              organizationId,
+              requestId: request.id,
+              recipientId: request.requesterId,
+              type: NotificationType.REQUEST_APPROVED,
+              title: "Request Approved",
+              message: `Your request "${request.title}" has received final sign-off and is approved.`,
+              cycle: request.currentCycle,
+              stepOrder: approval.stepOrder,
+            },
+            tx
+          );
+        }
+
+        return { success: true, decision: "APPROVE", approval: updatedApproval };
+      }
+
+      if (decision === "REJECT") {
+        // Mark current approval as REJECTED with atomic concurrency condition
+        const approvalUpdate = await tx.approval.updateMany({
+          where: {
+            id: approval.id,
+            status: ApprovalStatus.PENDING,
+          },
+          data: {
+            status: ApprovalStatus.REJECTED,
+            approverId: actor.id,
+            comment: cleanComment,
+            decidedAt: new Date(),
+          },
+        });
+
+        if (approvalUpdate.count === 0) {
+          throw new Error(
+            "409 Conflict: This approval step has already been decided or modified concurrently"
+          );
+        }
+
+        const updatedApproval = await tx.approval.findUnique({
+          where: { id: approval.id },
+        });
+
+        // Set request status to REJECTED (no future steps can be activated)
+        const reqUpdate = await tx.request.updateMany({
+          where: {
+            id: request.id,
+            organizationId,
+            status: RequestStatus.IN_REVIEW,
+            currentCycle: request.currentCycle,
+            currentStepOrder: approval.stepOrder,
+          },
+          data: {
+            status: RequestStatus.REJECTED,
+          },
+        });
+
+        if (reqUpdate.count === 0) {
+          throw new Error(
+            "409 Conflict: Request workflow state was modified concurrently"
+          );
+        }
+
+        // Log request rejection event
+        await tx.activityLog.create({
+          data: {
+            organizationId,
+            requestId: request.id,
+            actorId: actor.id,
+            action: ActivityAction.REQUEST_REJECTED,
+            details: `Request rejected at Step ${approval.stepOrder} (${approval.approvalStep?.title}) by ${actor.name} [${actor.role}]. Reason: "${cleanComment}"`,
+          },
+        });
+
+        // Dispatch rejection notification to requester inside transaction
+        await NotificationService.dispatchLifecycleNotification(
+          {
+            organizationId,
+            requestId: request.id,
+            recipientId: request.requesterId,
+            type: NotificationType.REQUEST_REJECTED,
+            title: "Request Declined",
+            message: `Your request "${request.title}" was declined by ${actor.name} [${actor.role}]. Reason: "${cleanComment}"`,
+            cycle: request.currentCycle,
+            stepOrder: approval.stepOrder,
+          },
+          tx
+        );
+
+        return { success: true, decision: "REJECT", approval: updatedApproval };
+      }
+
+      if (decision === "REQUEST_REVISION") {
+        // Mark current approval as REVISION_REQUESTED with atomic concurrency condition
+        const approvalUpdate = await tx.approval.updateMany({
+          where: {
+            id: approval.id,
+            status: ApprovalStatus.PENDING,
+          },
+          data: {
+            status: ApprovalStatus.REVISION_REQUESTED,
+            approverId: actor.id,
+            comment: cleanComment,
+            decidedAt: new Date(),
+          },
+        });
+
+        if (approvalUpdate.count === 0) {
+          throw new Error(
+            "409 Conflict: This approval step has already been decided or modified concurrently"
+          );
+        }
+
+        const updatedApproval = await tx.approval.findUnique({
+          where: { id: approval.id },
+        });
+
+        // Set request status to REVISION_REQUIRED
+        const reqUpdate = await tx.request.updateMany({
+          where: {
+            id: request.id,
+            organizationId,
+            status: RequestStatus.IN_REVIEW,
+            currentCycle: request.currentCycle,
+            currentStepOrder: approval.stepOrder,
+          },
+          data: {
+            status: RequestStatus.REVISION_REQUIRED,
+          },
+        });
+
+        if (reqUpdate.count === 0) {
+          throw new Error(
+            "409 Conflict: Request workflow state was modified concurrently"
+          );
+        }
+
+        // Log revision requested event
+        await tx.activityLog.create({
+          data: {
+            organizationId,
+            requestId: request.id,
+            actorId: actor.id,
+            action: ActivityAction.REVISION_REQUESTED,
+            details: `Revision requested at Step ${approval.stepOrder} (${approval.approvalStep?.title}) by ${actor.name} [${actor.role}]. Required changes: "${cleanComment}"`,
+          },
+        });
+
+        // Dispatch revision required notification to requester inside transaction
+        await NotificationService.dispatchLifecycleNotification(
+          {
+            organizationId,
+            requestId: request.id,
+            recipientId: request.requesterId,
+            type: NotificationType.REVISION_REQUESTED,
+            title: "Revision Required",
+            message: `Revision was requested for "${request.title}" by ${actor.name} [${actor.role}]. Reason: "${cleanComment}"`,
+            cycle: request.currentCycle,
+            stepOrder: approval.stepOrder,
+          },
+          tx
+        );
+
+        return { success: true, decision: "REQUEST_REVISION", approval: updatedApproval };
+      }
+
+      throw new Error(`400 Bad Request: Unknown approval decision '${decision}'`);
     });
+  }
 
-    if (!targetRequest) {
-      throw new Error("Request not found in specified organization");
-    }
+  /**
+   * Retrieves pending approvals where the authenticated user is currently eligible to act.
+   * Scoped strictly by organization, active step order, and exact role.
+   */
+  static async getPendingApprovalsForUser(params: GetPendingApprovalsParams) {
+    const { actor, page = 1, limit = 10, search } = params;
 
-    return prisma.approval.create({
-      data: {
-        requestId,
-        approvalStepId,
-        approverId,
-        stepOrder,
-        status,
-        comment,
-        decidedAt: new Date(),
+    const safePage = Math.max(1, Number(page) || 1);
+    const safeLimit = Math.min(Math.max(1, Number(limit) || 10), 50);
+
+    const where: Prisma.ApprovalWhereInput = {
+      status: ApprovalStatus.PENDING,
+      approvalStep: {
+        roleRequired: actor.role,
       },
+      request: {
+        organizationId: actor.organizationId,
+        status: RequestStatus.IN_REVIEW,
+        ...(search && search.trim() !== ""
+          ? {
+              OR: [
+                { title: { contains: search.trim(), mode: "insensitive" } },
+                { requester: { name: { contains: search.trim(), mode: "insensitive" } } },
+              ],
+            }
+          : {}),
+      },
+    };
+
+    // Query pending approvals for this role
+    const allMatching = await prisma.approval.findMany({
+      where,
       include: {
-        approver: {
-          select: { id: true, name: true, role: true },
+        approvalStep: true,
+        request: {
+          include: {
+            requester: {
+              select: { id: true, name: true, email: true, role: true },
+            },
+            department: {
+              select: { id: true, name: true, code: true },
+            },
+            requestType: {
+              select: { id: true, name: true, code: true },
+            },
+          },
         },
       },
+      orderBy: { createdAt: "desc" },
     });
+
+    // Strictly ensure approval.stepOrder === request.currentStepOrder and cycle === currentCycle (active step of active cycle only)
+    const actionable = allMatching.filter(
+      (a) =>
+        a.stepOrder === a.request.currentStepOrder &&
+        a.cycle === a.request.currentCycle
+    );
+
+    const totalCount = actionable.length;
+    const totalPages = Math.max(1, Math.ceil(totalCount / safeLimit));
+    const skip = (safePage - 1) * safeLimit;
+    const paginatedItems = actionable.slice(skip, skip + safeLimit);
+
+    return {
+      approvals: paginatedItems,
+      totalCount,
+      totalPages,
+      currentPage: safePage,
+      limit: safeLimit,
+    };
   }
 }

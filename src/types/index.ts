@@ -24,6 +24,7 @@ export interface CurrentUserContext {
   organizationName: string;
   departmentId?: string | null;
   departmentName?: string | null;
+  avatarUrl?: string | null;
 }
 
 export interface RequestSummaryDTO {

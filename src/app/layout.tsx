@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Flowinaja — Internal Request & Approval Platform",
+  title: "Flowinaja — Platform Permintaan & Persetujuan Internal",
   description:
-    "Lightweight, production-oriented internal workflow platform for organizations to manage requests, approvals, and operational audit logs.",
+    "Platform alur kerja internal berorientasi produksi untuk mengelola permintaan, persetujuan bertahap, dan jejak audit operasional organisasi.",
 };
 
 export default function RootLayout({
@@ -25,7 +25,7 @@ export default function RootLayout({
 }>) {
   return (
     <html
-      lang="en"
+      lang="id"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="h-full min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 font-sans">

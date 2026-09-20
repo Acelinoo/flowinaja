@@ -3,31 +3,36 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, Bell, Plus, Shield } from "lucide-react";
+import { Menu, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { CurrentUserContext } from "@/types";
+import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ROLE_LABELS } from "@/lib/constants/presentation";
 
 interface TopbarProps {
+  user: CurrentUserContext;
   onToggleMobileMenu: () => void;
 }
 
 const ROUTE_TITLES: Record<string, { title: string; category?: string }> = {
-  "/": { title: "Overview", category: "Core" },
-  "/requests": { title: "My Requests", category: "Requests" },
-  "/approvals": { title: "Approvals", category: "Workflow" },
-  "/notifications": { title: "Notifications", category: "System" },
-  "/management/requests": { title: "All Organization Requests", category: "Management" },
-  "/management/request-types": { title: "Request Types & Workflows", category: "Management" },
-  "/management/departments": { title: "Departments", category: "Management" },
-  "/management/users": { title: "Users & Roles", category: "Management" },
-  "/system/activity": { title: "System Activity Log", category: "System" },
-  "/system/settings": { title: "Organization Settings", category: "System" },
+  "/": { title: "Dasbor", category: "Utama" },
+  "/requests": { title: "Permintaan Saya", category: "Permintaan" },
+  "/requests/new": { title: "Buat Permintaan Baru", category: "Permintaan" },
+  "/approvals": { title: "Persetujuan", category: "Alur Kerja" },
+  "/notifications": { title: "Pusat Notifikasi", category: "Sistem" },
+  "/management/requests": { title: "Semua Permintaan Organisasi", category: "Manajemen" },
+  "/management/request-types": { title: "Tipe Permintaan & Alur Kerja", category: "Manajemen" },
+  "/management/departments": { title: "Departemen", category: "Manajemen" },
+  "/management/users": { title: "Pengguna & Peran", category: "Manajemen" },
+  "/system/activity": { title: "Log Aktivitas Sistem", category: "Sistem" },
+  "/system/settings": { title: "Pengaturan Organisasi", category: "Sistem" },
 };
 
-export function Topbar({ onToggleMobileMenu }: TopbarProps) {
+export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
   const pathname = usePathname();
   const currentRoute = ROUTE_TITLES[pathname] ?? {
-    title: pathname.replace(/^\//, "").split("/").map(s => s.charAt(0).toUpperCase() + s.slice(1)).join(" / "),
-    category: "App",
+    title: pathname.replace(/^\//, "").split("/").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" / "),
+    category: "Aplikasi",
   };
 
   return (
@@ -38,7 +43,7 @@ export function Topbar({ onToggleMobileMenu }: TopbarProps) {
           type="button"
           onClick={onToggleMobileMenu}
           className="lg:hidden p-1.5 rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-          aria-label="Open sidebar"
+          aria-label="Buka menu navigasi"
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -58,29 +63,42 @@ export function Topbar({ onToggleMobileMenu }: TopbarProps) {
 
       {/* Right Actions */}
       <div className="flex items-center gap-2.5">
-        {/* Security / Env indicator */}
-        <div className="hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded border border-slate-200 bg-slate-50 text-[11px] font-medium text-slate-600 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-300">
-          <Shield className="w-3 h-3 text-emerald-600" />
-          <span>RBAC Enforced</span>
+        {/* Authenticated User Identity Pill */}
+        <div className="flex items-center gap-2 px-2.5 py-1 rounded-md border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-800/60 text-xs">
+          <span className="font-semibold text-slate-800 dark:text-slate-200">
+            {user.name}
+          </span>
+          <span className="text-[10px] px-1.5 py-0.2 rounded bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-300 font-medium uppercase">
+            {ROLE_LABELS[user.role] || user.role}
+          </span>
         </div>
 
         {/* Notifications Shortcut */}
-        <Link
-          href="/notifications"
-          className="relative p-1.5 rounded-md text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
-          title="View notifications"
-        >
-          <Bell className="w-4 h-4" />
-          <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-blue-600" />
-        </Link>
+        <NotificationBell />
 
         {/* Primary Action */}
-        <Link href="/requests">
-          <Button size="sm" className="hidden sm:inline-flex">
+        <Link href="/requests/new">
+          <Button size="sm" className="hidden sm:inline-flex items-center gap-1">
             <Plus className="w-3.5 h-3.5" />
-            New Request
+            <span>Buat Permintaan</span>
           </Button>
         </Link>
+
+        {/* Sign Out Action */}
+        <form
+          action="/api/auth/signout"
+          method="POST"
+          className="inline-flex"
+        >
+          <button
+            type="submit"
+            className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-red-400 transition-colors"
+            title="Keluar"
+            aria-label="Keluar dari akun"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        </form>
       </div>
     </header>
   );

@@ -1,6 +1,7 @@
 import * as React from "react";
 import { RequestStatus, ApprovalStatus } from "@prisma/client";
 import { Badge } from "./badge";
+import { STATUS_LABELS } from "@/lib/constants/presentation";
 
 interface StatusBadgeProps {
   status: RequestStatus | ApprovalStatus | string;
@@ -8,35 +9,36 @@ interface StatusBadgeProps {
 }
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const getVariantAndLabel = (s: string) => {
+  const getVariant = (s: string) => {
     switch (s) {
       case "DRAFT":
-        return { variant: "neutral" as const, label: "Draft" };
+        return "neutral" as const;
       case "SUBMITTED":
-        return { variant: "default" as const, label: "Submitted" };
+        return "default" as const;
       case "IN_REVIEW":
-        return { variant: "warning" as const, label: "In Review" };
+        return "warning" as const;
       case "APPROVED":
-        return { variant: "success" as const, label: "Approved" };
+        return "success" as const;
       case "REJECTED":
-        return { variant: "destructive" as const, label: "Rejected" };
+        return "destructive" as const;
       case "REVISION_REQUIRED":
       case "REVISION_REQUESTED":
-        return { variant: "warning" as const, label: "Revision Required" };
+        return "warning" as const;
       case "PROCESSING":
-        return { variant: "default" as const, label: "Processing" };
+        return "default" as const;
       case "COMPLETED":
-        return { variant: "success" as const, label: "Completed" };
+        return "success" as const;
       case "CANCELLED":
-        return { variant: "neutral" as const, label: "Cancelled" };
+        return "neutral" as const;
       case "PENDING":
-        return { variant: "neutral" as const, label: "Pending" };
+        return "neutral" as const;
       default:
-        return { variant: "outline" as const, label: s };
+        return "outline" as const;
     }
   };
 
-  const { variant, label } = getVariantAndLabel(status);
+  const label = STATUS_LABELS[status] || status;
+  const variant = getVariant(status);
 
   return (
     <Badge variant={variant} className={className}>
