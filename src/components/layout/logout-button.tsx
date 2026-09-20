@@ -60,7 +60,7 @@ export function LogoutButton() {
               </button>
 
               <a
-                href="/api/auth/logout"
+                href="/logout"
                 className="px-4 py-2 text-xs font-semibold rounded-md bg-red-600 hover:bg-red-700 text-white shadow-xs transition-colors inline-flex items-center gap-2 cursor-pointer no-underline"
               >
                 <LogOut className="w-3.5 h-3.5" />

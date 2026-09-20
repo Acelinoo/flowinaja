@@ -8,5 +8,5 @@ import { redirect } from "next/navigation";
  * Clear-Site-Data header emission, and a clean redirect to /login.
  */
 export async function logoutAction() {
-  redirect("/api/auth/logout");
+  redirect("/logout");
 }

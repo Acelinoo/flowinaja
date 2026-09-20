@@ -227,7 +227,7 @@ export function Sidebar({ user, onNavClick, className }: SidebarProps) {
 
         <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800/80">
           <a
-            href="/api/auth/logout"
+            href="/logout"
             className="flex items-center gap-2 px-2 py-1.5 rounded-md text-xs font-medium text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-red-950/30 dark:hover:text-red-400 transition-colors cursor-pointer no-underline"
             title="Keluar dari akun"
           >

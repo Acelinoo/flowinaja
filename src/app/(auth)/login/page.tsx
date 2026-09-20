@@ -102,7 +102,7 @@ export default async function LoginPage({ searchParams }: LoginPageProps) {
                 <ArrowRight className="w-3.5 h-3.5" />
               </Link>
               <a
-                href="/api/auth/logout"
+                href="/logout"
                 className="py-1.5 px-3 rounded-md border border-red-200 dark:border-red-800/80 text-red-600 dark:text-red-400 bg-white dark:bg-slate-900 hover:bg-red-50 dark:hover:bg-red-950/50 font-medium flex items-center gap-1.5 transition-colors cursor-pointer text-xs no-underline shrink-0"
                 title="Keluar dari sesi ini"
               >
