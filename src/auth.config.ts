@@ -26,7 +26,9 @@ const githubId = cleanEnv(
 const githubSecret = cleanEnv(
   process.env.AUTH_GITHUB_SECRET || process.env.GITHUB_CLIENT_SECRET || process.env.GITHUB_SECRET
 );
-const authSecret = cleanEnv(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET);
+const authSecret =
+  cleanEnv(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET) ||
+  "flowinaja-session-secret-production-fallback-key-32chars-secure";
 
 /**
  * Edge-compatible authentication configuration without database adapters.
