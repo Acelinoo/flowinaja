@@ -22,6 +22,12 @@ export function SubmitDraftButton({ requestId }: SubmitDraftButtonProps) {
       if (!res.success) {
         setError(res.error || "Gagal mengajukan permintaan");
       } else {
+        try {
+          window.dispatchEvent(new Event("flowinaja:mutate"));
+          const bc = new BroadcastChannel("flowinaja_realtime");
+          bc.postMessage("mutate");
+          bc.close();
+        } catch {}
         router.refresh();
       }
     });

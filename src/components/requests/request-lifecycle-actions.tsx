@@ -46,12 +46,23 @@ export function RequestLifecycleActions({
   const isTerminal = terminalStates.includes(status);
   const canCancel = !isTerminal && (isOwner || canManage);
 
+  const triggerSync = () => {
+    try {
+      window.dispatchEvent(new Event("flowinaja:mutate"));
+      const bc = new BroadcastChannel("flowinaja_realtime");
+      bc.postMessage("mutate");
+      bc.close();
+    } catch {}
+  };
+
   const handleResubmit = () => {
     setError(null);
     startTransition(async () => {
       const res = await resubmitRevisionAction(requestId);
       if (!res.success) {
         setError(res.error || "Gagal mengajukan ulang permintaan");
+      } else {
+        triggerSync();
       }
     });
   };
@@ -62,6 +73,8 @@ export function RequestLifecycleActions({
       const res = await startProcessingAction(requestId);
       if (!res.success) {
         setError(res.error || "Gagal memulai pemrosesan permintaan");
+      } else {
+        triggerSync();
       }
     });
   };
@@ -72,6 +85,8 @@ export function RequestLifecycleActions({
       const res = await completeRequestAction(requestId);
       if (!res.success) {
         setError(res.error || "Gagal menyelesaikan permintaan");
+      } else {
+        triggerSync();
       }
     });
   };
@@ -85,6 +100,7 @@ export function RequestLifecycleActions({
       } else {
         setShowCancelModal(false);
         setCancelReason("");
+        triggerSync();
       }
     });
   };

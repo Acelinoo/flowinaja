@@ -13,6 +13,7 @@ import {
   ShieldCheck,
   MessageSquare,
 } from "lucide-react";
+import { formatRoleIndonesian } from "@/lib/constants/presentation";
 
 interface ApprovalDecisionPanelProps {
   requestId: string;
@@ -59,6 +60,12 @@ export function ApprovalDecisionPanel({
         setConfirmingAction(null);
       } else {
         setConfirmingAction(null);
+        try {
+          window.dispatchEvent(new Event("flowinaja:mutate"));
+          const bc = new BroadcastChannel("flowinaja_realtime");
+          bc.postMessage("mutate");
+          bc.close();
+        } catch {}
         router.refresh();
       }
     });
@@ -75,7 +82,7 @@ export function ApprovalDecisionPanel({
             </CardTitle>
           </div>
           <span className="text-[11px] font-mono px-2 py-0.5 rounded bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 font-medium">
-            Tahap {stepOrder}: {roleRequired}
+            Tahap {stepOrder}: {formatRoleIndonesian(roleRequired)}
           </span>
         </div>
         <CardDescription className="text-xs text-slate-600 dark:text-slate-300">

@@ -3,49 +3,20 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { Bell } from "lucide-react";
+import { useRealtimeSync } from "@/components/realtime/realtime-sync-provider";
 
 interface NotificationBellProps {
   initialCount?: number;
 }
 
 export function NotificationBell({ initialCount = 0 }: NotificationBellProps) {
+  const { unreadCount: realtimeUnreadCount } = useRealtimeSync();
   const [unreadCount, setUnreadCount] = useState<number>(initialCount);
 
+  // Sync with real-time sync provider
   useEffect(() => {
-    let isMounted = true;
-
-    async function fetchUnreadCount() {
-      try {
-        const res = await fetch("/api/notifications/unread-count", {
-          cache: "no-store",
-        });
-        if (res.ok) {
-          const data = await res.json();
-          if (isMounted && typeof data.unreadCount === "number") {
-            setUnreadCount(data.unreadCount);
-          }
-        }
-      } catch {
-        // Silently ignore network failures for notification poll
-      }
-    }
-
-    // Initial fetch on mount
-    fetchUnreadCount();
-
-    // Periodic poll every 30s
-    const interval = setInterval(fetchUnreadCount, 30000);
-
-    // Also refresh on window focus
-    const onFocus = () => fetchUnreadCount();
-    window.addEventListener("focus", onFocus);
-
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-      window.removeEventListener("focus", onFocus);
-    };
-  }, []);
+    setUnreadCount(realtimeUnreadCount);
+  }, [realtimeUnreadCount]);
 
   return (
     <Link

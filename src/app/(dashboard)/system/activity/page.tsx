@@ -6,7 +6,12 @@ import { Badge } from "@/components/ui/badge";
 import { UserRole } from "@prisma/client";
 import { requireRole } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
-import { ACTIVITY_ACTION_LABELS, formatDateIndonesian } from "@/lib/constants/presentation";
+import {
+  ACTIVITY_ACTION_LABELS,
+  formatDateIndonesian,
+  formatIndonesianActivityDetail,
+  formatRoleIndonesian,
+} from "@/lib/constants/presentation";
 
 export default async function SystemActivityPage() {
   const user = await requireRole(UserRole.ADMIN);
@@ -93,10 +98,10 @@ export default async function SystemActivityPage() {
                         )}
                       </div>
                       <p className="text-xs text-slate-600 dark:text-slate-300">
-                        {log.details || "Tindakan operasional dieksekusi"}
+                        {formatIndonesianActivityDetail(log.details)}
                       </p>
                       <div className="text-[10px] text-slate-400 flex items-center gap-2 pt-0.5">
-                        <span>Oleh {log.actor?.name || "Sistem"} ({log.actor?.role || "SYSTEM"})</span>
+                        <span>Oleh {log.actor?.name || "Sistem"} ({formatRoleIndonesian(log.actor?.role)})</span>
                         <span>•</span>
                         <div className="flex items-center gap-1">
                           <Clock className="w-3 h-3" />

@@ -83,7 +83,7 @@ export function RequestForm({
   const [metaReturnDate, setMetaReturnDate] = useState((initialMeta.returnDate as string) || "");
   const [metaTravelPurpose, setMetaTravelPurpose] = useState((initialMeta.purpose as string) || "");
 
-  const [metaCategory, setMetaCategory] = useState((initialMeta.category as string) || "General Operational");
+  const [metaCategory, setMetaCategory] = useState((initialMeta.category as string) || "Operasional Umum");
   const [metaDetails, setMetaDetails] = useState((initialMeta.details as string) || "");
 
   const selectedType = requestTypes.find((t) => t.id === selectedTypeId);
@@ -148,10 +148,19 @@ export function RequestForm({
 
       if (!res.success) {
         setError(res.error || "Terjadi kendala saat memproses permintaan.");
-      } else if (res.requestId) {
-        router.push(`/requests/${res.requestId}`);
       } else {
-        router.push("/requests");
+        try {
+          window.dispatchEvent(new Event("flowinaja:mutate"));
+          const bc = new BroadcastChannel("flowinaja_realtime");
+          bc.postMessage("mutate");
+          bc.close();
+        } catch {}
+
+        if (res.requestId) {
+          router.push(`/requests/${res.requestId}`);
+        } else {
+          router.push("/requests");
+        }
       }
     });
   };
@@ -319,7 +328,7 @@ export function RequestForm({
                 Kode Alur Kerja
               </label>
               <div className="h-9 px-3 flex items-center text-xs font-mono text-slate-600 dark:text-slate-300 bg-slate-50 dark:bg-slate-800/60 rounded-md border border-slate-200 dark:border-slate-800">
-                {selectedType?.code || "GENERAL"}
+                {selectedType?.code || "UMUM"}
               </div>
             </div>
           </div>

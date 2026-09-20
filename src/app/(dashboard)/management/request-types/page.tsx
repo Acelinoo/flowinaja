@@ -3,6 +3,7 @@ import { ArrowRight, Workflow } from "lucide-react";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { UserRole } from "@prisma/client";
+import { ROLE_LABELS } from "@/lib/constants/presentation";
 import { requireRole } from "@/lib/auth/server";
 import { prisma } from "@/lib/prisma";
 
@@ -72,7 +73,7 @@ export default async function ManagementRequestTypesPage() {
                     {rt.approvalSteps.map((step, sIdx) => (
                       <React.Fragment key={step.id}>
                         <span className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-medium">
-                          {step.stepOrder}. {step.title} ({step.roleRequired})
+                          {step.stepOrder}. {step.title} ({ROLE_LABELS[step.roleRequired] || step.roleRequired})
                         </span>
                         {sIdx < rt.approvalSteps.length - 1 && (
                           <ArrowRight className="w-3 h-3 text-slate-400" />

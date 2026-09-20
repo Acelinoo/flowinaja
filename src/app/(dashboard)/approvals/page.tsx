@@ -18,6 +18,7 @@ import {
   ShieldCheck,
 } from "lucide-react";
 import { UserRole } from "@prisma/client";
+import { ROLE_LABELS } from "@/lib/constants/presentation";
 
 interface ApprovalsPageProps {
   searchParams: Promise<{
@@ -61,8 +62,8 @@ export default async function ApprovalsPage({ searchParams }: ApprovalsPageProps
             <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-slate-100">
               Kotak Masuk Persetujuan
             </h2>
-            <Badge variant="default" className="text-[11px] font-mono">
-              {user.role}
+            <Badge variant="default" className="text-[11px] font-medium">
+              {ROLE_LABELS[user.role] || user.role}
             </Badge>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
@@ -111,7 +112,7 @@ export default async function ApprovalsPage({ searchParams }: ApprovalsPageProps
                 Antrean Peninjauan Aktif
               </CardTitle>
               <CardDescription className="text-xs">
-                Hanya permintaan yang sedang menunggu keputusan peran {user.role} pada tahap alur kerja saat ini yang ditampilkan.
+                Hanya permintaan yang sedang menunggu keputusan peran {ROLE_LABELS[user.role] || user.role} pada tahap alur kerja saat ini yang ditampilkan.
               </CardDescription>
             </div>
             {totalCount > 0 && (

@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { CurrentUserContext } from "@/types";
 import { NotificationBell } from "@/components/notifications/notification-bell";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { LogoutButton } from "@/components/layout/logout-button";
+import { RealtimeStatusBadge } from "@/components/realtime/realtime-status-badge";
 import { ROLE_LABELS } from "@/lib/constants/presentation";
 
 interface TopbarProps {
@@ -123,6 +125,9 @@ export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
           </span>
         </div>
 
+        {/* Real-time Sync Status Indicator */}
+        <RealtimeStatusBadge />
+
         {/* Theme Toggle Button (Light/Dark Mode) */}
         <ThemeToggle />
 
@@ -138,20 +143,7 @@ export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
         </Link>
 
         {/* Sign Out Action */}
-        <form
-          action="/api/auth/signout"
-          method="POST"
-          className="inline-flex"
-        >
-          <button
-            type="submit"
-            className="p-1.5 rounded-md text-slate-500 hover:text-red-600 hover:bg-red-50 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-red-400 transition-colors"
-            title="Keluar"
-            aria-label="Keluar dari akun"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        </form>
+        <LogoutButton />
       </div>
     </header>
   );
