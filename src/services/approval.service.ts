@@ -218,7 +218,7 @@ export class ApprovalService {
               requestId: request.id,
               actorId: actor.id,
               action: ActivityAction.APPROVAL_APPROVED,
-              details: `Step ${approval.stepOrder} (${approval.approvalStep?.title}) approved by ${actor.name} [${actor.role}]. Workflow advanced to Step ${nextStep.stepOrder} (${nextStep.title}) [${nextStep.roleRequired}].${cleanComment ? ` Note: "${cleanComment}"` : ""}`,
+              details: `Tahap ${approval.stepOrder} (${approval.approvalStep?.title}) disetujui oleh ${actor.name} [${actor.role}]. Alur kerja berlanjut ke Tahap ${nextStep.stepOrder} (${nextStep.title}) [${nextStep.roleRequired}].${cleanComment ? ` Catatan: "${cleanComment}"` : ""}`,
             },
           });
 
@@ -262,7 +262,7 @@ export class ApprovalService {
               requestId: request.id,
               actorId: actor.id,
               action: ActivityAction.REQUEST_APPROVED,
-              details: `Final approval granted at Step ${approval.stepOrder} (${approval.approvalStep?.title}) by ${actor.name} [${actor.role}]. Request is fully APPROVED.${cleanComment ? ` Note: "${cleanComment}"` : ""}`,
+              details: `Persetujuan akhir diberikan pada Tahap ${approval.stepOrder} (${approval.approvalStep?.title}) oleh ${actor.name} [${actor.role}]. Permintaan resmi DISETUJUI.${cleanComment ? ` Catatan: "${cleanComment}"` : ""}`,
             },
           });
 
@@ -273,8 +273,8 @@ export class ApprovalService {
               requestId: request.id,
               recipientId: request.requesterId,
               type: NotificationType.REQUEST_APPROVED,
-              title: "Request Approved",
-              message: `Your request "${request.title}" has received final sign-off and is approved.`,
+              title: "Permintaan Disetujui Penuh",
+              message: `Permintaan Anda "${request.title}" telah memperoleh persetujuan akhir dan resmi disetujui.`,
               cycle: request.currentCycle,
               stepOrder: approval.stepOrder,
             },
@@ -337,7 +337,7 @@ export class ApprovalService {
             requestId: request.id,
             actorId: actor.id,
             action: ActivityAction.REQUEST_REJECTED,
-            details: `Request rejected at Step ${approval.stepOrder} (${approval.approvalStep?.title}) by ${actor.name} [${actor.role}]. Reason: "${cleanComment}"`,
+            details: `Permintaan ditolak pada Tahap ${approval.stepOrder} (${approval.approvalStep?.title}) oleh ${actor.name} [${actor.role}]. Alasan: "${cleanComment}"`,
           },
         });
 
@@ -348,8 +348,8 @@ export class ApprovalService {
             requestId: request.id,
             recipientId: request.requesterId,
             type: NotificationType.REQUEST_REJECTED,
-            title: "Request Declined",
-            message: `Your request "${request.title}" was declined by ${actor.name} [${actor.role}]. Reason: "${cleanComment}"`,
+            title: "Permintaan Ditolak",
+            message: `Permintaan Anda "${request.title}" ditolak oleh ${actor.name} [${actor.role}]. Alasan: "${cleanComment}"`,
             cycle: request.currentCycle,
             stepOrder: approval.stepOrder,
           },
@@ -411,7 +411,7 @@ export class ApprovalService {
             requestId: request.id,
             actorId: actor.id,
             action: ActivityAction.REVISION_REQUESTED,
-            details: `Revision requested at Step ${approval.stepOrder} (${approval.approvalStep?.title}) by ${actor.name} [${actor.role}]. Required changes: "${cleanComment}"`,
+            details: `Revisi diminta pada Tahap ${approval.stepOrder} (${approval.approvalStep?.title}) oleh ${actor.name} [${actor.role}]. Catatan perbaikan: "${cleanComment}"`,
           },
         });
 
@@ -422,8 +422,8 @@ export class ApprovalService {
             requestId: request.id,
             recipientId: request.requesterId,
             type: NotificationType.REVISION_REQUESTED,
-            title: "Revision Required",
-            message: `Revision was requested for "${request.title}" by ${actor.name} [${actor.role}]. Reason: "${cleanComment}"`,
+            title: "Revisi Diperlukan",
+            message: `Revisi diminta untuk permintaan "${request.title}" oleh ${actor.name} [${actor.role}]. Catatan perbaikan: "${cleanComment}"`,
             cycle: request.currentCycle,
             stepOrder: approval.stepOrder,
           },

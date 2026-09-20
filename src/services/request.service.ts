@@ -266,7 +266,7 @@ export class RequestService {
         requestId: request.id,
         actorId: actor.id,
         action: ActivityAction.REQUEST_CREATED,
-        details: `Draft request "${request.title}" created.`,
+        details: `Draf permintaan "${request.title}" berhasil dibuat.`,
       },
     });
 
@@ -356,7 +356,7 @@ export class RequestService {
         requestId: updated.id,
         actorId: actor.id,
         action: ActivityAction.REQUEST_UPDATED,
-        details: `Draft request "${updated.title}" details updated.`,
+        details: `Draf permintaan "${updated.title}" berhasil diperbarui.`,
       },
     });
 
@@ -469,7 +469,7 @@ export class RequestService {
           requestId: req.id,
           actorId: actor.id,
           action: ActivityAction.REQUEST_SUBMITTED,
-          details: `Request "${req.title}" submitted. Approval workflow started at Step 1 (${firstStep.title}) requiring ${firstStep.roleRequired}.`,
+          details: `Permintaan "${req.title}" diajukan. Alur persetujuan dimulai pada Tahap 1 (${firstStep.title}) [${firstStep.roleRequired}].`,
         },
       });
 
@@ -572,14 +572,14 @@ export class RequestService {
             requestId: req.id,
             actorId: actor.id,
             action: ActivityAction.REQUEST_CREATED,
-            details: `Request "${req.title}" created.`,
+            details: `Permintaan "${req.title}" berhasil dibuat.`,
           },
           {
             organizationId: actor.organizationId,
             requestId: req.id,
             actorId: actor.id,
             action: ActivityAction.REQUEST_SUBMITTED,
-            details: `Request "${req.title}" submitted. Approval workflow started at Step 1 (${firstStep.title}) requiring ${firstStep.roleRequired}.`,
+            details: `Permintaan "${req.title}" diajukan. Alur persetujuan dimulai pada Tahap 1 (${firstStep.title}) [${firstStep.roleRequired}].`,
           },
         ],
       });
@@ -682,7 +682,7 @@ export class RequestService {
         requestId: updated.id,
         actorId: actor.id,
         action: ActivityAction.REQUEST_UPDATED,
-        details: `Revised specifications for request "${updated.title}" updated by requester.`,
+        details: `Spesifikasi revisi untuk permintaan "${updated.title}" diperbarui oleh pemohon.`,
       },
     });
 
@@ -802,7 +802,7 @@ export class RequestService {
           requestId: req.id,
           actorId: actor.id,
           action: ActivityAction.REQUEST_RESUBMITTED,
-          details: `Request "${req.title}" resubmitted for Approval Cycle #${newCycle}. Workflow restarted at Step 1 (${firstStep.title}) requiring ${firstStep.roleRequired}.`,
+          details: `Revisi untuk permintaan "${req.title}" diajukan ulang (Siklus #${newCycle}). Alur persetujuan dimulai kembali pada Tahap 1 (${firstStep.title}) [${firstStep.roleRequired}].`,
         },
       });
 
@@ -882,7 +882,7 @@ export class RequestService {
           requestId: request.id,
           actorId: actor.id,
           action: ActivityAction.REQUEST_PROCESSING,
-          details: `Request processing initiated by ${actor.name} [${actor.role}].`,
+          details: `Pemrosesan operasional permintaan dimulai oleh ${actor.name} [${actor.role}].`,
         },
       });
 
@@ -893,8 +893,8 @@ export class RequestService {
           requestId: request.id,
           recipientId: request.requesterId,
           type: NotificationType.REQUEST_PROCESSING,
-          title: "Fulfillment Started",
-          message: `Operational processing has commenced for request "${request.title}".`,
+          title: "Permintaan Sedang Diproses",
+          message: `Pekerjaan operasional pemenuhan untuk permintaan "${request.title}" telah dimulai.`,
           cycle: request.currentCycle,
         },
         tx
@@ -961,7 +961,7 @@ export class RequestService {
           requestId: request.id,
           actorId: actor.id,
           action: ActivityAction.REQUEST_COMPLETED,
-          details: `Request successfully completed and fulfilled by ${actor.name} [${actor.role}].`,
+          details: `Permintaan berhasil diselesaikan dan dipenuhi secara tuntas oleh ${actor.name} [${actor.role}].`,
         },
       });
 
@@ -972,8 +972,8 @@ export class RequestService {
           requestId: request.id,
           recipientId: request.requesterId,
           type: NotificationType.REQUEST_COMPLETED,
-          title: "Request Completed",
-          message: `Your request "${request.title}" has been successfully completed and fulfilled.`,
+          title: "Permintaan Selesai Dipenuhi",
+          message: `Permintaan Anda "${request.title}" telah berhasil diselesaikan dan dipenuhi secara tuntas.`,
           cycle: request.currentCycle,
         },
         tx
@@ -1058,9 +1058,9 @@ export class RequestService {
           requestId: request.id,
           actorId: actor.id,
           action: ActivityAction.REQUEST_CANCELLED,
-          details: `Request cancelled by ${actor.name} [${actor.role}]${
-            isOwner ? " (Requester)" : ""
-          }.${cleanReason ? ` Reason: "${cleanReason}"` : ""}`,
+          details: `Permintaan dibatalkan oleh ${actor.name} [${actor.role}]${
+            isOwner ? " (Pemohon)" : ""
+          }.${cleanReason ? ` Alasan: "${cleanReason}"` : ""}`,
         },
       });
 
@@ -1071,9 +1071,9 @@ export class RequestService {
           requestId: request.id,
           recipientId: request.requesterId,
           type: NotificationType.REQUEST_CANCELLED,
-          title: "Request Cancelled",
-          message: `Request "${request.title}" was cancelled by ${actor.name} [${actor.role}].${
-            cleanReason ? ` Reason: "${cleanReason}"` : ""
+          title: "Permintaan Dibatalkan",
+          message: `Permintaan "${request.title}" dibatalkan oleh ${actor.name} [${actor.role}].${
+            cleanReason ? ` Alasan: "${cleanReason}"` : ""
           }`,
           cycle: request.currentCycle,
         },

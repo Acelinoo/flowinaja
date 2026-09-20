@@ -251,11 +251,14 @@ export class NotificationService {
 
     const requiredRole = pendingApproval.approvalStep.roleRequired;
 
+    // Both the designated role approvers and organization Admins hold authority and must be notified
+    const eligibleRoles = Array.from(new Set([requiredRole, UserRole.ADMIN]));
+
     // 2. Resolve eligible approvers in the same organization
     let approvers = await client.user.findMany({
       where: {
         organizationId: request.organizationId,
-        role: requiredRole,
+        role: { in: eligibleRoles },
         isActive: true,
         id: { not: request.requesterId }, // Exclude requester if they happen to share role
       },
@@ -269,7 +272,7 @@ export class NotificationService {
       approvers = await client.user.findMany({
         where: {
           organizationId: request.organizationId,
-          role: requiredRole,
+          role: { in: eligibleRoles },
           isActive: true,
         },
         include: {
@@ -291,14 +294,17 @@ export class NotificationService {
 
       const notif = await client.notification.upsert({
         where: { dedupeKey },
-        update: {}, // Idempotent: don't alter existing
+        update: {
+          title: `Persetujuan Diperlukan: Tahap ${pendingApproval.stepOrder}`,
+          message: `Permintaan "${request.title}" menunggu otorisasi persetujuan ${pendingApproval.approvalStep.title}.`,
+        },
         create: {
           organizationId: request.organizationId,
           recipientId: approver.id,
           requestId: request.id,
           type: NotificationType.APPROVAL_PENDING,
-          title: `Approval Required: Step ${pendingApproval.stepOrder}`,
-          message: `Request "${request.title}" is waiting for your ${pendingApproval.approvalStep.title} sign-off.`,
+          title: `Persetujuan Diperlukan: Tahap ${pendingApproval.stepOrder}`,
+          message: `Permintaan "${request.title}" menunggu otorisasi persetujuan ${pendingApproval.approvalStep.title}.`,
           cycle: request.currentCycle,
           stepOrder: pendingApproval.stepOrder,
           dedupeKey,
@@ -366,7 +372,10 @@ export class NotificationService {
     // 3. Upsert notification
     return client.notification.upsert({
       where: { dedupeKey },
-      update: {},
+      update: {
+        title: params.title,
+        message: params.message,
+      },
       create: {
         organizationId: params.organizationId,
         recipientId: params.recipientId,
