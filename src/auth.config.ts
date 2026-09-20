@@ -2,26 +2,57 @@ import type { NextAuthConfig } from "next-auth";
 import Google from "next-auth/providers/google";
 import GitHub from "next-auth/providers/github";
 
+function cleanEnv(val?: string): string | undefined {
+  if (!val) return undefined;
+  let trimmed = val.trim();
+  if (
+    (trimmed.startsWith('"') && trimmed.endsWith('"')) ||
+    (trimmed.startsWith("'") && trimmed.endsWith("'"))
+  ) {
+    trimmed = trimmed.slice(1, -1).trim();
+  }
+  return trimmed || undefined;
+}
+
+const googleId = cleanEnv(
+  process.env.AUTH_GOOGLE_ID || process.env.GOOGLE_CLIENT_ID || process.env.GOOGLE_ID
+);
+const googleSecret = cleanEnv(
+  process.env.AUTH_GOOGLE_SECRET || process.env.GOOGLE_CLIENT_SECRET || process.env.GOOGLE_SECRET
+);
+const githubId = cleanEnv(
+  process.env.AUTH_GITHUB_ID || process.env.GITHUB_CLIENT_ID || process.env.GITHUB_ID
+);
+const githubSecret = cleanEnv(
+  process.env.AUTH_GITHUB_SECRET || process.env.GITHUB_CLIENT_SECRET || process.env.GITHUB_SECRET
+);
+const authSecret = cleanEnv(process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET);
+
 /**
  * Edge-compatible authentication configuration without database adapters.
  * Used by middleware for fast, lightweight session verification on the edge.
  */
 export const authConfig: NextAuthConfig = {
+  secret: authSecret,
+  trustHost: true,
   providers: [
     Google({
-      clientId: process.env.AUTH_GOOGLE_ID,
-      clientSecret: process.env.AUTH_GOOGLE_SECRET,
+      clientId: googleId,
+      clientSecret: googleSecret,
     }),
-    GitHub({
-      clientId: process.env.AUTH_GITHUB_ID,
-      clientSecret: process.env.AUTH_GITHUB_SECRET,
-    }),
+    ...(githubId && githubSecret
+      ? [
+          GitHub({
+            clientId: githubId,
+            clientSecret: githubSecret,
+          }),
+        ]
+      : []),
   ],
   pages: {
     signIn: "/login",
     error: "/login",
   },
-  trustHost: true,
   session: {
     strategy: "jwt",
   },
