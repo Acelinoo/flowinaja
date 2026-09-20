@@ -3,56 +3,51 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-const COOKIE_BASE_NAMES = [
+const ESSENTIAL_AUTH_COOKIES = [
   "__Secure-authjs.session-token",
   "authjs.session-token",
-  "__Secure-next-auth.session-token",
-  "next-auth.session-token",
   "__Host-authjs.csrf-token",
   "authjs.csrf-token",
-  "__Host-next-auth.csrf-token",
-  "next-auth.csrf-token",
   "__Secure-authjs.callback-url",
   "authjs.callback-url",
-  "__Secure-next-auth.callback-url",
-  "next-auth.callback-url",
-  "__Secure-authjs.pkce.code_verifier",
-  "authjs.pkce.code_verifier",
-  "__Secure-authjs.state",
-  "authjs.state",
 ];
 
 async function handleLogout(request: Request) {
-  const namesToClear = new Set<string>();
+  const namesToClear = new Set<string>(ESSENTIAL_AUTH_COOKIES);
 
-  // 1. Add all base auth cookie names and their chunk variations (.0 to .9)
-  for (const base of COOKIE_BASE_NAMES) {
-    namesToClear.add(base);
-    for (let i = 0; i <= 9; i++) {
-      namesToClear.add(`${base}.${i}`);
+  // Parse actual cookies sent by the browser
+  const rawCookieHeader = request.headers.get("cookie");
+  if (rawCookieHeader) {
+    const parts = rawCookieHeader.split(";");
+    for (const part of parts) {
+      const trimmed = part.trim();
+      const eqIdx = trimmed.indexOf("=");
+      if (eqIdx > 0) {
+        const name = trimmed.slice(0, eqIdx).trim();
+        if (
+          name.includes("authjs") ||
+          name.includes("next-auth") ||
+          name.includes("session") ||
+          name.includes("csrf") ||
+          name.includes("callback")
+        ) {
+          namesToClear.add(name);
+        }
+      }
     }
   }
 
-  // 2. Add any cookies from next/headers
+  // Also read from next/headers if accessible
   try {
     const cookieStore = await cookies();
-    const all = cookieStore.getAll();
-    for (const c of all) {
-      namesToClear.add(c.name);
-    }
-  } catch (err) {}
-
-  // 3. Add any cookies parsed directly from raw cookie header
-  try {
-    const rawCookieHeader = request.headers.get("cookie");
-    if (rawCookieHeader) {
-      const parts = rawCookieHeader.split(";");
-      for (const part of parts) {
-        const trimmed = part.trim();
-        const eqIdx = trimmed.indexOf("=");
-        if (eqIdx > 0) {
-          namesToClear.add(trimmed.slice(0, eqIdx).trim());
-        }
+    for (const c of cookieStore.getAll()) {
+      if (
+        c.name.includes("authjs") ||
+        c.name.includes("next-auth") ||
+        c.name.includes("session") ||
+        c.name.includes("csrf")
+      ) {
+        namesToClear.add(c.name);
       }
     }
   } catch (err) {}
@@ -77,7 +72,7 @@ async function handleLogout(request: Request) {
     });
   }
 
-  // Clear-Site-Data instructs the browser engine to wipe all cookies for this origin
+  // Clear-Site-Data: "cookies" tells the browser to wipe ALL origin cookies
   response.headers.set("Clear-Site-Data", '"cookies"');
   response.headers.set(
     "Cache-Control",
