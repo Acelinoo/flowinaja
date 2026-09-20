@@ -82,48 +82,48 @@ async function main() {
   // 4. Seed 5 Request Types with Sequential ApprovalSteps
   const requestTypesToSeed = [
     {
-      name: "Purchase Request",
+      name: "Permintaan Pengadaan (Purchase Request)",
       code: "REQ-PUR",
-      description: "Procurement of office equipment, software licenses, or asset purchases.",
+      description: "Pengadaan perlengkapan kantor, lisensi perangkat lunak, dan pembelian aset operasional.",
       steps: [
-        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Supervisor Review", isFinal: false },
-        { stepOrder: 2, roleRequired: UserRole.MANAGER, title: "Department Manager Approval", isFinal: false },
-        { stepOrder: 3, roleRequired: UserRole.ADMIN, title: "Finance & Admin Sign-off", isFinal: true },
+        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Pemeriksaan Penyelia (Supervisor)", isFinal: false },
+        { stepOrder: 2, roleRequired: UserRole.MANAGER, title: "Persetujuan Manajer Departemen", isFinal: false },
+        { stepOrder: 3, roleRequired: UserRole.ADMIN, title: "Otorisasi Keuangan & Administrasi", isFinal: true },
       ],
     },
     {
-      name: "IT Access Request",
+      name: "Permintaan Akses IT (IT Access Request)",
       code: "REQ-IT",
-      description: "Access privileges to company systems, VPN, servers, and internal tools.",
+      description: "Hak akses sistem organisasi, jaringan VPN perusahaan, server, dan perangkat lunak internal.",
       steps: [
-        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Supervisor Review", isFinal: false },
-        { stepOrder: 2, roleRequired: UserRole.ADMIN, title: "IT Admin Provisioning", isFinal: true },
+        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Pemeriksaan Penyelia (Supervisor)", isFinal: false },
+        { stepOrder: 2, roleRequired: UserRole.ADMIN, title: "Penyediaan Akses Administrator IT", isFinal: true },
       ],
     },
     {
-      name: "Maintenance Request",
+      name: "Permintaan Pemeliharaan (Maintenance Request)",
       code: "REQ-MNT",
-      description: "Facility maintenance, equipment repairs, and workplace infrastructure fixes.",
+      description: "Pemeliharaan fasilitas gedung, perbaikan peralatan kantor, dan perbaikan infrastruktur kerja.",
       steps: [
-        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Supervisor Inspection", isFinal: false },
-        { stepOrder: 2, roleRequired: UserRole.ADMIN, title: "Facility Admin Authorization", isFinal: true },
+        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Inspeksi Awal Penyelia", isFinal: false },
+        { stepOrder: 2, roleRequired: UserRole.ADMIN, title: "Otorisasi Administrasi Fasilitas", isFinal: true },
       ],
     },
     {
-      name: "Business Travel Request",
+      name: "Permintaan Perjalanan Dinas (Business Travel Request)",
       code: "REQ-TRV",
-      description: "Travel authorization, per-diem allowances, accommodation, and conference attendance.",
+      description: "Otorisasi perjalanan dinas luar kota, tunjangan harian, akomodasi penginapan, dan kegiatan dinas.",
       steps: [
-        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Supervisor Review", isFinal: false },
-        { stepOrder: 2, roleRequired: UserRole.MANAGER, title: "Department Manager Budget Approval", isFinal: true },
+        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Pemeriksaan Penyelia (Supervisor)", isFinal: false },
+        { stepOrder: 2, roleRequired: UserRole.MANAGER, title: "Persetujuan Anggaran Manajer", isFinal: true },
       ],
     },
     {
-      name: "General Request",
+      name: "Permintaan Operasional Umum (General Request)",
       code: "REQ-GEN",
-      description: "General administrative requests, inquiries, and internal operational submissions.",
+      description: "Pengajuan administratif umum, permintaan informasi operasional, dan kebutuhan kantor harian.",
       steps: [
-        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Supervisor Review", isFinal: true },
+        { stepOrder: 1, roleRequired: UserRole.SUPERVISOR, title: "Pemeriksaan Penyelia (Supervisor)", isFinal: true },
       ],
     },
   ];

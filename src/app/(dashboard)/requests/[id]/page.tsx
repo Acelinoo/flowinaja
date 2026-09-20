@@ -32,6 +32,11 @@ import {
   Play,
 } from "lucide-react";
 import { UserRole } from "@prisma/client";
+import {
+  ACTIVITY_ACTION_LABELS,
+  formatIndonesianActivityDetail,
+  formatRoleIndonesian,
+} from "@/lib/constants/presentation";
 
 interface RequestDetailPageProps {
   params: Promise<{
@@ -301,27 +306,27 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
             <CardContent>
               {typeCode === "REQ-PUR" && (
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Barang / Aset</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Barang / Aset</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.item || "—")}
                     </dd>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Jumlah Unit</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Jumlah Unit</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.quantity ?? "—")} unit
                     </dd>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Estimasi Total Biaya</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Estimasi Total Biaya</dt>
+                    <dd className="font-bold text-emerald-600 dark:text-emerald-400 mt-1 text-xs sm:text-sm">
                       Rp {Number(metadata.estimatedCost || 0).toLocaleString("id-ID")}
                     </dd>
                   </div>
-                  <div className="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Justifikasi Kebutuhan</dt>
-                    <dd className="text-slate-800 dark:text-slate-200 mt-1 whitespace-pre-wrap">
+                  <div className="sm:col-span-2 p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Justifikasi Kebutuhan</dt>
+                    <dd className="text-slate-800 dark:text-slate-200 mt-1.5 text-xs whitespace-pre-wrap leading-relaxed">
                       {String(metadata.justification || "—")}
                     </dd>
                   </div>
@@ -330,21 +335,21 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
 
               {typeCode === "REQ-IT" && (
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Sistem / Aplikasi Target</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Sistem / Aplikasi Target</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.system || "—")}
                     </dd>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Tingkat Akses</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Tingkat Akses</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.accessLevel || "—")}
                     </dd>
                   </div>
-                  <div className="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Justifikasi Kebutuhan Akses</dt>
-                    <dd className="text-slate-800 dark:text-slate-200 mt-1 whitespace-pre-wrap">
+                  <div className="sm:col-span-2 p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Justifikasi Kebutuhan Akses</dt>
+                    <dd className="text-slate-800 dark:text-slate-200 mt-1.5 text-xs whitespace-pre-wrap leading-relaxed">
                       {String(metadata.justification || "—")}
                     </dd>
                   </div>
@@ -353,27 +358,35 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
 
               {typeCode === "REQ-MNT" && (
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Lokasi / Ruangan</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Lokasi / Ruangan</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.location || "—")}
                     </dd>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Tingkat Urgensi</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
-                      {String(metadata.urgency || "—")}
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Tingkat Urgensi</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
+                      {metadata.urgency === "LOW"
+                        ? "Rendah (Perbaikan Minor)"
+                        : metadata.urgency === "MEDIUM"
+                        ? "Sedang (Fasilitas Standar)"
+                        : metadata.urgency === "HIGH"
+                        ? "Tinggi (Operasional Terganggu)"
+                        : metadata.urgency === "CRITICAL"
+                        ? "Kritis (Darurat / Berbahaya)"
+                        : String(metadata.urgency || "—")}
                     </dd>
                   </div>
-                  <div className="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Ringkasan Kendala</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="sm:col-span-2 p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Ringkasan Kendala</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.issue || "—")}
                     </dd>
                   </div>
-                  <div className="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Deskripsi Detail Masalah</dt>
-                    <dd className="text-slate-800 dark:text-slate-200 mt-1 whitespace-pre-wrap">
+                  <div className="sm:col-span-2 p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Deskripsi Detail Masalah</dt>
+                    <dd className="text-slate-800 dark:text-slate-200 mt-1.5 text-xs whitespace-pre-wrap leading-relaxed">
                       {String(metadata.issueDetails || "—")}
                     </dd>
                   </div>
@@ -382,27 +395,27 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
 
               {typeCode === "REQ-TRV" && (
                 <dl className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-                  <div className="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Kota / Lokasi Tujuan</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="sm:col-span-2 p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Kota / Lokasi Tujuan</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.destination || "—")}
                     </dd>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Tanggal Keberangkatan</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Tanggal Keberangkatan</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.travelDate || "—")}
                     </dd>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Tanggal Kepulangan</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Tanggal Kepulangan</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
                       {String(metadata.returnDate || "—")}
                     </dd>
                   </div>
-                  <div className="sm:col-span-2 p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Maksud Perjalanan &amp; Target Hasil</dt>
-                    <dd className="text-slate-800 dark:text-slate-200 mt-1 whitespace-pre-wrap">
+                  <div className="sm:col-span-2 p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Maksud Perjalanan &amp; Target Hasil</dt>
+                    <dd className="text-slate-800 dark:text-slate-200 mt-1.5 text-xs whitespace-pre-wrap leading-relaxed">
                       {String(metadata.purpose || "—")}
                     </dd>
                   </div>
@@ -411,15 +424,15 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
 
               {typeCode === "REQ-GEN" && (
                 <dl className="grid grid-cols-1 gap-4 text-xs">
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Kategori</dt>
-                    <dd className="font-semibold text-slate-900 dark:text-slate-100 mt-1">
-                      {String(metadata.category || "General")}
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Kategori</dt>
+                    <dd className="font-bold text-slate-900 dark:text-slate-100 mt-1 text-xs sm:text-sm">
+                      {String(metadata.category || "Umum")}
                     </dd>
                   </div>
-                  <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800">
-                    <dt className="text-slate-400 font-medium">Detail Operasional</dt>
-                    <dd className="text-slate-800 dark:text-slate-200 mt-1 whitespace-pre-wrap">
+                  <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80">
+                    <dt className="text-slate-500 dark:text-slate-400 font-semibold text-[11px] uppercase tracking-wider">Detail Operasional</dt>
+                    <dd className="text-slate-800 dark:text-slate-200 mt-1.5 text-xs whitespace-pre-wrap leading-relaxed">
                       {String(metadata.details || "—")}
                     </dd>
                   </div>
@@ -427,7 +440,7 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
               )}
 
               {!["REQ-PUR", "REQ-IT", "REQ-MNT", "REQ-TRV", "REQ-GEN"].includes(typeCode) && (
-                <div className="p-3 bg-slate-50 dark:bg-slate-850 rounded-md border border-slate-200 dark:border-slate-800 font-mono text-[11px]">
+                <div className="p-3.5 bg-slate-100/90 dark:bg-slate-800/90 rounded-lg border border-slate-200 dark:border-slate-700/80 font-mono text-[11px]">
                   <pre className="overflow-x-auto">
                     {JSON.stringify(metadata, null, 2)}
                   </pre>
@@ -528,20 +541,20 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
                             </span>
                           )}
                           {!approval && (
-                            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-50 dark:bg-slate-850 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-800">
+                            <span className="text-[10px] font-medium text-slate-400 dark:text-slate-500 bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded border border-slate-200 dark:border-slate-700">
                               Belum Dimulai
                             </span>
                           )}
                         </div>
 
                         <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                          Wajib: <span className="font-mono font-medium">{step.roleRequired}</span>
+                          Wajib: <span className="font-mono font-medium">{formatRoleIndonesian(step.roleRequired)}</span>
                           {step.isFinal && " • Penyetuju Akhir"}
                         </div>
 
                         {approval?.approver && (
                           <div className="text-[11px] text-slate-600 dark:text-slate-300 mt-1">
-                            Diputuskan oleh: <strong>{approval.approver.name}</strong> ({approval.approver.role})
+                            Diputuskan oleh: <strong>{approval.approver.name}</strong> ({formatRoleIndonesian(approval.approver.role)})
                             {approval.decidedAt && (
                               <span className="text-[10px] text-slate-400 ml-1">
                                 pada {new Date(approval.decidedAt).toLocaleDateString("id-ID", { month: "short", day: "numeric" })}
@@ -574,7 +587,7 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
                     return (
                       <div
                         key={`history-cycle-${cycleNum}`}
-                        className="p-3 rounded-md bg-slate-50 dark:bg-slate-850/60 border border-slate-200 dark:border-slate-800 space-y-2 text-xs"
+                        className="p-3 rounded-md bg-slate-100/70 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-2 text-xs"
                       >
                         <div className="font-semibold text-slate-700 dark:text-slate-300 flex items-center justify-between">
                           <span>Siklus Persetujuan #{cycleNum}</span>
@@ -606,7 +619,7 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
                               </div>
                               {ha.approver && (
                                 <div className="text-[10px] text-slate-500">
-                                  Diputuskan oleh {ha.approver.name} ({ha.approver.role})
+                                  Diputuskan oleh {ha.approver.name} ({formatRoleIndonesian(ha.approver.role)})
                                   {ha.decidedAt && ` pada ${new Date(ha.decidedAt).toLocaleDateString("id-ID")}`}
                                 </div>
                               )}
@@ -647,7 +660,7 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
                       <div className="absolute -left-1 mt-1 w-2 h-2 rounded-full bg-slate-400 dark:bg-slate-600" />
                       <div className="flex items-center justify-between">
                         <span className="font-semibold text-slate-800 dark:text-slate-200">
-                          {log.action.replace(/_/g, " ")}
+                          {ACTIVITY_ACTION_LABELS[log.action] || log.action.replace(/_/g, " ")}
                         </span>
                         <span className="text-[10px] text-slate-400">
                           {new Date(log.createdAt).toLocaleTimeString("id-ID", {
@@ -656,11 +669,11 @@ export default async function RequestDetailPage({ params }: RequestDetailPagePro
                           })}
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5">
-                        {log.details || "Tindakan dijalankan"}
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 mt-0.5 leading-relaxed">
+                        {formatIndonesianActivityDetail(log.details)}
                       </p>
                       <div className="text-[10px] text-slate-400 mt-0.5">
-                        Oleh {log.actor?.name || "Sistem"} ({log.actor?.role || "SYSTEM"})
+                        Oleh {log.actor?.name || "Sistem"} ({formatRoleIndonesian(log.actor?.role)})
                       </div>
                     </div>
                   ))}

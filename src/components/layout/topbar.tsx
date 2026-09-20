@@ -7,6 +7,7 @@ import { Menu, Plus, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CurrentUserContext } from "@/types";
 import { NotificationBell } from "@/components/notifications/notification-bell";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { ROLE_LABELS } from "@/lib/constants/presentation";
 
 interface TopbarProps {
@@ -15,25 +16,74 @@ interface TopbarProps {
 }
 
 const ROUTE_TITLES: Record<string, { title: string; category?: string }> = {
-  "/": { title: "Dasbor", category: "Utama" },
+  "/": { title: "Dasbor Operasional", category: "Utama" },
   "/requests": { title: "Permintaan Saya", category: "Permintaan" },
   "/requests/new": { title: "Buat Permintaan Baru", category: "Permintaan" },
   "/approvals": { title: "Persetujuan", category: "Alur Kerja" },
   "/notifications": { title: "Pusat Notifikasi", category: "Sistem" },
   "/management/requests": { title: "Semua Permintaan Organisasi", category: "Manajemen" },
   "/management/request-types": { title: "Tipe Permintaan & Alur Kerja", category: "Manajemen" },
-  "/management/departments": { title: "Departemen", category: "Manajemen" },
-  "/management/users": { title: "Pengguna & Peran", category: "Manajemen" },
+  "/management/departments": { title: "Departemen & Struktur", category: "Manajemen" },
+  "/management/users": { title: "Pengguna & Peran Akses", category: "Manajemen" },
   "/system/activity": { title: "Log Aktivitas Sistem", category: "Sistem" },
   "/system/settings": { title: "Pengaturan Organisasi", category: "Sistem" },
 };
 
-export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
-  const pathname = usePathname();
-  const currentRoute = ROUTE_TITLES[pathname] ?? {
-    title: pathname.replace(/^\//, "").split("/").map((s) => s.charAt(0).toUpperCase() + s.slice(1)).join(" / "),
+function resolveBreadcrumb(pathname: string): { title: string; category?: string } {
+  if (ROUTE_TITLES[pathname]) {
+    return ROUTE_TITLES[pathname];
+  }
+
+  // Handle /requests/[id]/edit
+  if (/^\/requests\/[^/]+\/edit$/.test(pathname)) {
+    return { title: "Edit Draf Permintaan", category: "Permintaan" };
+  }
+
+  // Handle /requests/[id]
+  if (/^\/requests\/[^/]+$/.test(pathname)) {
+    const id = pathname.split("/")[2];
+    const shortId = id.length > 8 ? id.slice(0, 8) : id;
+    return { title: `Detail Permintaan (${shortId})`, category: "Permintaan" };
+  }
+
+  // General Indonesian translation of path segments
+  const segments = pathname.replace(/^\//, "").split("/");
+  const translated = segments.map((seg) => {
+    switch (seg.toLowerCase()) {
+      case "requests":
+        return "Permintaan";
+      case "approvals":
+        return "Persetujuan";
+      case "notifications":
+        return "Notifikasi";
+      case "management":
+        return "Manajemen";
+      case "departments":
+        return "Departemen";
+      case "users":
+        return "Pengguna";
+      case "activity":
+        return "Log Aktivitas";
+      case "settings":
+        return "Pengaturan";
+      case "new":
+        return "Baru";
+      case "edit":
+        return "Edit";
+      default:
+        return seg.charAt(0).toUpperCase() + seg.slice(1);
+    }
+  });
+
+  return {
+    title: translated.join(" / "),
     category: "Aplikasi",
   };
+}
+
+export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
+  const pathname = usePathname();
+  const currentRoute = resolveBreadcrumb(pathname);
 
   return (
     <header className="h-14 bg-white border-b border-slate-200 px-4 sm:px-6 flex items-center justify-between dark:bg-slate-900 dark:border-slate-800 shrink-0 select-none">
@@ -51,7 +101,7 @@ export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
         {/* Page Breadcrumb & Title */}
         <div className="flex items-center gap-2">
           {currentRoute.category && (
-            <span className="text-xs font-medium text-slate-400 hidden sm:inline">
+            <span className="text-xs font-medium text-slate-400 dark:text-slate-500 hidden sm:inline">
               {currentRoute.category} /
             </span>
           )}
@@ -72,6 +122,9 @@ export function Topbar({ user, onToggleMobileMenu }: TopbarProps) {
             {ROLE_LABELS[user.role] || user.role}
           </span>
         </div>
+
+        {/* Theme Toggle Button (Light/Dark Mode) */}
+        <ThemeToggle />
 
         {/* Notifications Shortcut */}
         <NotificationBell />

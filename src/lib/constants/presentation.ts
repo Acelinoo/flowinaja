@@ -132,3 +132,89 @@ export function formatCurrencyIDR(amount: number): string {
   if (isNaN(amount)) return "Rp 0";
   return `Rp ${new Intl.NumberFormat("id-ID").format(amount)}`;
 }
+
+/**
+ * Format peran pengguna ke Bahasa Indonesia formal.
+ */
+export function formatRoleIndonesian(role?: string | null): string {
+  if (!role) return "Pengguna";
+  switch (role.toUpperCase()) {
+    case "ADMIN":
+      return "Administrator";
+    case "MANAGER":
+      return "Manajer";
+    case "SUPERVISOR":
+      return "Penyelia (Supervisor)";
+    case "EMPLOYEE":
+      return "Karyawan";
+    case "SYSTEM":
+      return "Sistem Otomatis";
+    default:
+      return role;
+  }
+}
+
+/**
+ * Menerjemahkan dan memformat detail log audit ke Bahasa Indonesia formal.
+ */
+export function formatIndonesianActivityDetail(detail?: string | null): string {
+  if (!detail) return "Aktivitas alur kerja tercatat.";
+  let res = detail;
+
+  // Pembuatan permintaan
+  res = res.replace(/Request "([^"]+)" created\./g, 'Permintaan "$1" berhasil dibuat.');
+  res = res.replace(/Draft request "([^"]+)" created\./g, 'Draf permintaan "$1" berhasil disimpan.');
+
+  // Pengajuan permintaan
+  res = res.replace(
+    /Request "([^"]+)" submitted\. Approval workflow started at Step (\d+) \(([^)]+)\) requiring (\w+)\./g,
+    'Permintaan "$1" resmi diajukan. Alur persetujuan dimulai pada Tahap $2 ($3) dengan otorisasi peran $4.'
+  );
+
+  // Persetujuan akhir
+  res = res.replace(
+    /Final approval granted at Step (\d+) \(([^)]+)\) by ([^[]+) \[(\w+)\]\. Request is fully APPROVED\.(.*)/g,
+    'Persetujuan akhir diberikan pada Tahap $1 ($2) oleh $3 [$4]. Permintaan telah DISETUJUI sepenuhnya.$5'
+  );
+
+  // Persetujuan tahapan
+  res = res.replace(
+    /Approval granted at Step (\d+) \(([^)]+)\) by ([^[]+) \[(\w+)\]\. Advanced to Step (\d+) \(([^)]+)\)\.(.*)/g,
+    'Persetujuan diberikan pada Tahap $1 ($2) oleh $3 [$4]. Lanjut ke Tahap $5 ($6).$7'
+  );
+
+  // Permintaan revisi
+  res = res.replace(
+    /Revision requested at Step (\d+) \(([^)]+)\) by ([^[]+) \[(\w+)\]\. Required changes: "([^"]+)"/g,
+    'Revisi diminta pada Tahap $1 ($2) oleh $3 [$4]. Catatan perbaikan: "$5"'
+  );
+
+  // Penolakan
+  res = res.replace(
+    /Rejection at Step (\d+) \(([^)]+)\) by ([^[]+) \[(\w+)\]\. Reason: "([^"]+)"/g,
+    'Permintaan ditolak pada Tahap $1 ($2) oleh $3 [$4]. Alasan penolakan: "$5"'
+  );
+
+  // Pengajuan kembali
+  res = res.replace(
+    /Request "([^"]+)" resubmitted for cycle #(\d+)\. Workflow restarted at Step 1 \(([^)]+)\) requiring (\w+)\./g,
+    'Permintaan "$1" diajukan kembali (siklus #$2). Alur dimulai kembali pada Tahap 1 ($3) dengan otorisasi $4.'
+  );
+
+  // Siklus pemrosesan & selesai
+  res = res.replace(
+    /Request processing started by ([^[]+) \[(\w+)\]\.(.*)/g,
+    'Pemrosesan operasional dimulai oleh $1 [$2].$3'
+  );
+  res = res.replace(
+    /Request marked as COMPLETED by ([^[]+) \[(\w+)\]\.(.*)/g,
+    'Permintaan telah selesai dipenuhi oleh $1 [$2].$3'
+  );
+  res = res.replace(
+    /Request cancelled by requester\.(.*)/g,
+    'Permintaan dibatalkan oleh pemohon.$1'
+  );
+
+  return res;
+}
+

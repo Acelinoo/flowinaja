@@ -147,7 +147,7 @@ export function RequestForm({
       }
 
       if (!res.success) {
-        setError(res.error || "An unexpected error occurred");
+        setError(res.error || "Terjadi kendala saat memproses permintaan.");
       } else if (res.requestId) {
         router.push(`/requests/${res.requestId}`);
       } else {
@@ -290,7 +290,7 @@ export function RequestForm({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Contoh: Pengadaan 3 Kursi Kantor Ergonomis untuk Operasional"
-              className="w-full h-9 px-3 text-xs rounded-md border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600"
+              className="w-full h-9 px-3 text-xs rounded-md border border-slate-200 bg-white dark:border-slate-800 dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder:text-slate-500 dark:placeholder:text-slate-400 focus:outline-none focus:ring-1 focus:ring-blue-600"
             />
             <p className="text-[11px] text-slate-400 mt-1">Ringkasan singkat permintaan (3–150 karakter).</p>
           </div>
